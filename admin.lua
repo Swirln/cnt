@@ -106,7 +106,7 @@ end
 -- @return bool: If the player is an admin, this function returns true. Otherwise, false.
 local function IsAdmin(player)
   name = player.Name
-  id = player.UserId
+  id = player.userId
   if admins[name] or admins[id] then
     return true
   end
