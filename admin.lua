@@ -14,7 +14,7 @@
   2 = Admin
   3 = Temp Admin
   4 = Moderator
-  5 and below = Test User (Doesn't have access to any commands that affect the game.)
+  5 and above = Test User (Doesn't have access to any commands that affect the game.)
 --]]
 local admins = {
   ["Niall"] = 1,
@@ -261,6 +261,7 @@ commands.unlockserver["level"] = 1
 commands.unlockserver["description"] = "Unlocks the server if its locked."
 commands.slock = commands.unlockserver
 
+-- Freezes a player in place.
 commands.freeze = {}
 commands.freeze["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
@@ -275,6 +276,7 @@ end
 commands.freeze["level"] = 4
 commands.freeze["description"] = "Freezes a player in place, making them unable to move."
 
+-- Unfreezes them.
 commands.unfreeze = {}
 commands.unfreeze["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
@@ -287,9 +289,10 @@ commands.unfreeze["command"] = function(sender, arguments, targets)
   end
 end
 commands.unfreeze["level"] = 4
-commands.unfreeze["description"] = "Unfreezes a player, making them able to move again."
+commands.unfreeze["description"] = "Thaws a player, making them able to move again."
 commands.thaw = commands.unfreeze
 
+-- Explodes a player.
 commands.explode = {}
 commands.explode["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
@@ -302,6 +305,71 @@ commands.explode["command"] = function(sender, arguments, targets)
 end
 commands.explode["level"] = 3
 commands.explode["description"] = "Explodes a player!"
+
+-- Makes a player transparent.
+commands.invisible = {}
+commands.invisible["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.Character then
+      for _, part in pairs(player.Character:GetChildren()) do
+        if part:IsA("Part") then
+          print(part.Name)
+          part.Transparency = 1
+        end
+      end
+    end
+  end
+end
+commands.invisible["level"] = 3
+commands.invisible["description"] = "Makes a player invisible."
+commands.ghost = commands.invisible
+commands.ghostify = commands.invisible
+
+-- Plays a song from Roblox or from a URL.
+commands.music = {}
+commands.music["command"] = function(sender, arguments)
+  if NoArguments(arguments) then
+    return
+  end
+
+  local url = HasValue(arguments, "url")
+  local looped = HasValue(arguments, "looped")
+
+  local status = Instance.new("Hint")
+  status.Parent = Workspace
+  status.Text = "Stopping all music..."
+  for _, object in pairs(workspace:GetChildren()) do
+    if object:IsA("Sound") then
+      object:Stop()
+      object:Destroy()
+    end
+  end
+
+  status.Text = "Playing music..."
+
+  local music = Instance.new("Sound")
+  music.Parent = Workspace
+  music.Name = "CNTMusic"
+  if url then
+    music.SoundId = arguments[1]
+  else
+    music.SoundId = "http://roblox.com/asset?id=".. arguments[1]
+  end
+  music.Volume = 1
+
+  -- Play
+  repeat
+    music:Play()
+    wait(2.5)
+    music:Stop()
+    wait(.5)
+    music:Play()
+  until music.IsPlaying
+
+  status:Destroy()
+end
+commands.music["level"] = 3
+commands.music["description"] = "Plays music."
 
 -- Command Functions
 --- Gets a list of targets from a table of arguments.
@@ -385,6 +453,7 @@ local function ParseMessage(player, message)
       table.insert(arguments, argument)
     end
     local commandName = arguments[1]
+    commandName = string.lower(commandName)
     local commandFunction = commands[commandName]["command"]
     table.remove(arguments, 1)
     local targets = GetTargets(player, arguments)
@@ -443,6 +512,7 @@ end
 Players.PlayerAdded:connect(OnPlayerAdded)
 
 --- Enable additional scripts
+--[[
 local anticheat = game:WaitForChild("Anticheat")
 anticheat.Name = RandomString(math.random(50, 75))
 anticheat.Disabled = false
@@ -453,3 +523,4 @@ end)
 if INFECTED then
   game:WaitForChild("Scan").Disabled = false
 end
+]]
