@@ -12,7 +12,7 @@
   </a>
 </div>
 <div align="center">
-	Server essentials for [Finobe](https://finobe.com) places.
+	Server essentials for <a href="https://finobe.com">Finobe</a> places.
 </div>
 
 ## Installation
