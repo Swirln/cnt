@@ -1,6 +1,6 @@
 --[[
   File Name: admin.lua
-  Description: The main admin commands for CaNT
+  Description: The main admin commands for CNT
   Authors: Niall, Carrot
   Date: 6/16/2018 @ 5:15 PM CST (11:15 PM GMT)
   https://github.com/carat-ye/cnt
@@ -61,7 +61,7 @@ local characters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", 
                     "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V",
                     "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"}
 
---- Get a random script with described length.
+--- Generate a random script with described length.
 -- @param length number: The length of the desired random string.
 -- @return random string: The random string that was generated.
 local function RandomString(length)
@@ -111,6 +111,18 @@ local function IsAdmin(player)
     return true
   end
   return false
+end
+
+--- Returns an index of a value in a table.
+-- @param table seeking: The table to look in.
+-- @param string or (number, table) value: The value to find the index of.
+-- @return number or (bool): The index of the value. Returns false if it couldn't find it.
+local function ReturnIndexOf(seeking, value)
+  for index, seekingValue in ipairs(seeking) do
+    if seekingValue == value then
+      return index
+    end
+  end
 end
 
 --- Finds if a string starts with a certain character.
@@ -289,12 +301,15 @@ commands.unfreeze["command"] = function(sender, arguments, targets)
   end
 end
 commands.unfreeze["level"] = 4
-commands.unfreeze["description"] = "Thaws a player, making them able to move again."
+commands.unfreeze["description"] = "Thaws a player, making them able to move again if they're frozen."
 commands.thaw = commands.unfreeze
 
 -- Explodes a player.
 commands.explode = {}
 commands.explode["command"] = function(sender, arguments, targets)
+  if NoArguments(arguments) then
+    return
+  end
   for _, player in pairs(targets) do
     if player.Character and player.Character.Torso then
       local explosion = Instance.new("Explosion")
@@ -304,16 +319,18 @@ commands.explode["command"] = function(sender, arguments, targets)
   end
 end
 commands.explode["level"] = 3
-commands.explode["description"] = "Explodes a player!"
+commands.explode["description"] = "Explodes a player."
 
 -- Makes a player transparent.
 commands.invisible = {}
 commands.invisible["command"] = function(sender, arguments, targets)
+  if NoArguments(arguments) then
+    return
+  end
   for _, player in pairs(targets) do
     if player.Character then
       for _, part in pairs(player.Character:GetChildren()) do
         if part:IsA("Part") then
-          print(part.Name)
           part.Transparency = 1
         end
       end
@@ -324,6 +341,27 @@ commands.invisible["level"] = 3
 commands.invisible["description"] = "Makes a player invisible."
 commands.ghost = commands.invisible
 commands.ghostify = commands.invisible
+
+-- Makes a player visible again.
+commands.uninvisible = {}
+commands.uninvisible["command"] = function(sender, arguments, targets)
+  if NoArguments(arguments) then
+    return
+  end
+  for _, player in pairs(targets) do
+    if player.Character then
+      for _, part in pairs(player.Character:GetChildren()) do
+        if part:IsA("Part") then
+          part.Transparency = 0
+        end
+      end
+    end
+  end
+end
+commands.invisible["level"] = 3
+commands.invisible["description"] = "Removes a players invisbility."
+commands.unghost = commands.uninvisible
+commands.unghostify = commands.uninvisible
 
 -- Plays a song from Roblox or from a URL.
 commands.music = {}
@@ -371,7 +409,153 @@ end
 commands.music["level"] = 3
 commands.music["description"] = "Plays music."
 
+-- Modifies a command's power level.
+commands.modifycommand = {}
+commands.modifycommand["command"] = function(sender, arguments)
+  if NoArguments(arguments) then
+    return
+  end
+  local command = arguments[1]
+  local level = arguments[2]
+  if commands[command] and command and level then
+    commands[command][level] = level
+  end
+end
+commands.modifycommand["level"] = 1
+commands.modifycommand["description"] = "Modifies a command's power level."
+
+-- Kicks a player from the game.
+commands.kick = {}
+commands.kick["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    player:Destroy()
+  end
+end
+commands.kick["level"] = 3
+commands.kick["description"] = "Kicks a player from the game."
+
+-- TODO: userid support
+-- Bans a player from the game.
+commands.ban = {}
+commands.ban["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if admins[player.Name] and admins[player.Name] > admins[sender.Name] then
+      table.insert(banned, player)
+      player:Destroy()
+    elseif not admins[player.Name] then
+      table.insert(banned, player)
+      player:Destroy()
+    end
+  end
+end
+commands.ban["level"] = 2
+commands.ban["description"] = "Bans a user from the game."
+
+-- Unbans a player from the game.
+-- TODO: userid support
+commands.unban = {}
+commands.unban["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if banned[player.Name] then
+      if ReturnIndexOf(banned, player.Name) then
+        local index = ReturnIndexOf(banned, player.Name)
+        table.remove(banned, index)
+      end
+    end
+  end
+end
+commands.unban["level"] = 2
+commands.unban["description"] = "Unbans a user from the game."
+
+-- Makes a player sit.
+commands.sit = {}
+commands.sit["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.Character and player.Character.Humanoid then
+      player.Character.Humanoid.Sit = true
+    end
+  end
+end
+commands.sit["level"] = 4
+commands.sit["description"] = "Makes a player sit."
+
+-- Makes a character jump.
+commands.jump = {}
+commands.jump["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.Character and player.Character.Humanoid then
+      player.Character.Humanoid.Jump = true
+    end
+  end
+end
+commands.jump["level"] = 4
+commands.jump["description"] = "Makes a player jump."
+
+-- Lock's a players character.
+commands.lock = {}
+commands.lock["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.Character then
+      for _, object in pairs(player.Character:GetDescendants()) do
+        if object:IsA("BasePart") then
+          object.Locked = true
+        end
+      end
+    end
+  end
+end
+commands.lock["level"] = 3
+commands.lock["description"] = "Locks a players character."
+
+-- Unlock's a players character.
+commands.unlock = {}
+commands.unlock["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.Character then
+      for _, object in pairs(player.Character:GetDescendants()) do
+        if object:IsA("BasePart") then
+          object.Locked = false
+        end
+      end
+    end
+  end
+end
+commands.unlock["level"] = 3
+commands.unlock["description"] = "Unlocks a players character."
+
+-- Changes a players walkspeed.
+commands.walkspeed = {}
+commands.walkspeed["command"] = function(sender, arguments, targets)
+  if not arguments[2] or tonumber(arguments[2]) == nil then
+    return
+  end
+  for _, player in pairs(targets) do
+    if player.Character and player.Character.Humanoid then
+      player.Character.Humanoid.WalkSpeed = arguments[2]
+    end
+  end
+end
+commands.walkspeed["level"] = 4
+commands.walkspeed["description"] = "Makes a player jump."
+commands.ws = commands.walkspeed
+
+-- Changes a value in a player's leaderstats.
+commands.valset = {}
+commands.valset["command"] = function(sender, arguments, targets)
+  if NoArguments(arguments) then
+    return
+  end
+  for _, player in pairs(targets) do
+    if player.leaderstats then
+      if player.leaderstats[arguments[1]] then
+        player.leaderstats[arguments[1]] = arguments[2]
+      end
+    end
+  end
+end
+
 -- Command Functions
+
 --- Gets a list of targets from a table of arguments.
 -- Possible arguments can be "me", "all", "others", "random", "admins", and "nonadmins". If the first
 -- argument is blank then it returns the sender as a table.
@@ -454,6 +638,9 @@ local function ParseMessage(player, message)
     end
     local commandName = arguments[1]
     commandName = string.lower(commandName)
+    if commands[commandName] == nil then
+      return
+    end
     local commandFunction = commands[commandName]["command"]
     table.remove(arguments, 1)
     local targets = GetTargets(player, arguments)
@@ -473,7 +660,7 @@ local function ParseMessage(player, message)
           commandFunction(player, arguments, targets)
         end)
         if not success then
-          warn("CNT: Error occurred while executing command `".. commandName .."`. Lua reports this error: `".. err .. "`")
+          warn('CNT: Error occurred while executing command "'.. commandName ..'". Lua reports this error: `".. err .. "`")
         end
       end)
     end

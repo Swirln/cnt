@@ -91,7 +91,7 @@ end
 commands.commandName["level"] = 5
 commands.commandName["description"] = "This is my command."
 ```
-The above command, when executed using `<prefix>commandName`, should print "Hello world!" to console.<br><br>
+The above command, when executed using `<prefix>command`, should print "Hello world!" to console.<br><br>
 Functions are also fully documented in the code, for anyone who would like to add more than just commands.
 ## Authors
 * **Carrot** - *Developer* - [carat-ye](https://github.com/carat-ye)
