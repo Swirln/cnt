@@ -8,21 +8,17 @@ math.randomseed(os.time())
 
 --- Configuration
 local admins = { -- 1 = Owner, 2 = Admin, 3 = TempAdmin, 4 = Mod, 5 = Normal Player
-  "Niall" = 1,
-  "Raymonf" = 1,
-  "Carrot" = 1,
+  ["Niall"] = 1,
+  ["Raymonf"] = 1,
+  ["Carrot"] = 1,
 }
 local banned = {} -- List players that are banned from your game here.
 local prefixes = { -- Admin prefixes, e.g ":kill EnergyCell"
-	":",
-	";",
-	"?",
-	"^",
-	"@",
-	".",
-	"/",
-	"$",
-	"!",
+  ":",
+  ";",
+  "@",
+  ".",
+  ">",
 }
 
 --- Declarations
@@ -39,7 +35,7 @@ for i = 48,  57 do table.insert(charset, string.char(i)) end
 for i = 65,  90 do table.insert(charset, string.char(i)) end
 for i = 97, 122 do table.insert(charset, string.char(i)) end
 
-local function string.random(length)
+local function RandomString(length)
   if length > 0 then
     return string.random(length - 1) .. charset[math.random(1, #charset)]
   else
@@ -60,7 +56,7 @@ end
 -- Shuts down the server.
 local function ShutDown()
   -- TODO: HttpPost to a url with the shutdown reason for monitoring stuff like exploits with lodes of data
-  for _, player in pairs(Players:GetPlayers())
+  for _, player in pairs(Players:GetPlayers()) do
     player:Destroy()
   end
 end
@@ -95,6 +91,8 @@ end
 
 
 local function ParseMessage(message)
+
+end
 
 --- Commands
 local commands = {}
@@ -180,7 +178,7 @@ Players.PlayerAdded:connect(OnPlayerAdded)
 
 --- Enable AC
 local anticheat = game:WaitForChild("Anticheat")
-anticheat.Name = string.random(math.random(69))
+anticheat.Name = RandomString(math.random(69))
 anticheat.Disabled = false
 anticheat.Changed:connect(function()
   ShutDown()
