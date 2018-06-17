@@ -660,7 +660,7 @@ local function ParseMessage(player, message)
           commandFunction(player, arguments, targets)
         end)
         if not success then
-          warn("CNT: Error occurred while executing command \"".. commandName ..""\". Lua reports this error: \"".. err .. "\"")
+          warn("CNT: Error occurred while executing command \"".. commandName .."\". Lua reports this error: \"".. err .. "\"")
         end
       end)
     end
