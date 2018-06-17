@@ -14,7 +14,7 @@
 <div align="center">
 	Server essentials for [Finobe](https://finobe.com) places.
 </div>
-<div>&nbsp;</div>
+
 ## Installation
 ### Downloading from Source
 - Clone from the GitHub using the Clone or Download button.
