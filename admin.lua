@@ -276,7 +276,7 @@ end
 commands.freeze["level"] = 4
 commands.freeze["description"] = "Freezes a player in place, making them unable to move."
 
--- Unfreezes them.
+-- Thaws a player.
 commands.unfreeze = {}
 commands.unfreeze["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
@@ -356,7 +356,7 @@ commands.music["command"] = function(sender, arguments)
     music.SoundId = "http://roblox.com/asset?id=".. arguments[1]
   end
   music.Volume = 1
-
+  music.Looped = looped
   -- Play
   repeat
     music:Play()
