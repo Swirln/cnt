@@ -654,13 +654,13 @@ local function ParseMessage(player, message)
       powerLevel = admins[player.UserId]
     end
     if commandFunction ~= nil and powerLevel <= commands[commandName]["level"] then
-      print("CNT: Executing command `".. commandName .."` with arguments `".. table.concat(arguments, " ") .. "` with targets `" .. table.concat(targetNames, " ") .. "`")
+      print("CNT: Executing command \"".. commandName .."\" with arguments \"".. table.concat(arguments, " ") .. "\" with targets \"" .. table.concat(targetNames, " ") .. "\"")
       Spawn(function()
         local success, err = pcall(function()
           commandFunction(player, arguments, targets)
         end)
         if not success then
-          warn('CNT: Error occurred while executing command "'.. commandName ..'". Lua reports this error: `".. err .. "`")
+          warn("CNT: Error occurred while executing command \"".. commandName ..""\". Lua reports this error: \"".. err .. "\"")
         end
       end)
     end
