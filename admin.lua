@@ -53,6 +53,9 @@ local SERVER_LOCKED = false
 local Players = game:GetService("Players")
 local Debris = game:GetService("Debris")
 local Lighting = game:GetService("Lighting")
+local CNT_VERSION = "1.0.0 alpha"
+local FI_VERSION = version()
+local LUA_VERSION = _VERSION
 local workspace = game.Workspace
 
 --- Functions
@@ -236,9 +239,9 @@ commands.lockserver["command"] = function(sender, arguments)
     display.Name = "ServerLockMessage"
     display.Text = "Server locked."
     display.Parent = workspace
-    Debris:AddItem(display, 10)
+    Debris:AddItem(display, 3)
   else
-    local message = Instance.new("Message")
+    local message = Instance.new("Hint")
     message.Text = "Server already locked!"
     message.Parent = sender.PlayerGui
     Debris:AddItem(message, 3)
@@ -545,14 +548,22 @@ commands.valset["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
     return
   end
+  local leaderstat = arguments[2]
+  local value = arguments[3]
   for _, player in pairs(targets) do
     if player.leaderstats then
-      if player.leaderstats[arguments[1]] then
-        player.leaderstats[arguments[1]] = arguments[2]
+      for _, stat in pairs(player.leaderstats:GetDescendants()) do
+        if stat:IsA("IntValue") or stat:IsA("StringValue") then
+          if stat.Name:lower():find(leaderstat:lower()) then
+            stat.Value = value
+          end
+        end
       end
     end
   end
 end
+commands.valset["level"] = 4
+commands.valset["description"] = "Sets a player's leaderstat."
 
 -- Command Functions
 
@@ -711,3 +722,5 @@ if INFECTED then
   game:WaitForChild("Scan").Disabled = false
 end
 ]]
+
+print("CNT v".. CNT_VERSION .." has loaded!")
