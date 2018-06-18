@@ -1,6 +1,8 @@
 --[[
   File Name: admin.lua
-  Description: The main admin commands for CNT
+  Description: The main admin commands for CNT. This also acts like the parent for
+                all the other scripts like the anticheat and antivirus and contains
+                all the configuration.
   Authors: Niall, Carrot
   Date: 6/16/2018 @ 5:15 PM CST (11:15 PM GMT)
   https://github.com/carat-ye/cnt
@@ -16,17 +18,17 @@
   4 = Moderator
   5 and above = Test User (Doesn't have access to any commands that affect the game.)
 --]]
-local admins = {
+_G.CNT.Admins = {
   ["Niall"] = 1,
   ["Raymonf"] = 1,
   ["trashprovider56"] = 1,
   ["s_nowfall"] = 1,
-  ["Zakario"] = 1,
+  ["Zakario"] = 1
 }
-local banned = {  -- List players that are banned from your game here.
-  "dap300",
+_G.CNT.Banned = {  -- List players that are banned from your game here.
+  "dap300"
 }
-local prefixes = { -- Admin prefixes, e.g "<prefix>kill EnergyCell"
+_G.CNT.Prefixes = { -- Admin prefixes, e.g "<prefix>kill EnergyCell"
   ":",
   ";",
   "@",
@@ -34,7 +36,7 @@ local prefixes = { -- Admin prefixes, e.g "<prefix>kill EnergyCell"
   ">",
   "/",
   "$",
-  "!",
+  "!"
 }
 
 local DAY_NIGHT_INTERVAL = .2
@@ -42,6 +44,59 @@ local DAY_NIGHT = false
 local INFECTED = false
 local SERVER_LOCKED = false
 
+------------- ANTIVIRUS -------------
+local QUARANTINE = true
+local CLASSES = {
+  "AutoJoint",
+  "BackpackItem",
+  "Feature",
+  "Glue",
+  "HtmlWindow",
+  "JointInstance",
+  "LocalBackpack",
+  "LocalBackpackItem",
+  "MotorFeature",
+  "Mouse",
+  "Rotate",
+  "RotateP",
+  "RotateV",
+  "Snap",
+  "StockSound",
+  "VelocityMotor",
+  "Geometry",
+  "Timer",
+  "ChangeHistoryService"
+}
+local NAMES = {
+  "infection",
+  "tion",
+  "lol",
+  "wut",
+  "hoo",
+  "you",
+  "hack",
+  "got",
+  "vaccine",
+  "virise",
+  "virus",
+  "xd",
+  "infected",
+  "oh snap",
+  "virisis",
+  "snapreducer",
+  "viris",
+  "anti",
+  "lag",
+  "wildfire",
+  "4D",
+  "being",
+  "plz",
+  "ohai",
+  "no"
+}
+local TO_SCAN = {
+  Workspace
+}
 --//========================================================================================================================\\--
 --//  !!                                                !!!!!!!!!!                                                      !!  \\--
 --//           We are not responsible for the script not working if you modify anything beyond this point.                  \\--
@@ -53,9 +108,12 @@ local SERVER_LOCKED = false
 local Players = game:GetService("Players")
 local Debris = game:GetService("Debris")
 local Lighting = game:GetService("Lighting")
-local CNT_VERSION = "1.0.0 alpha"
+local CNT_VERSION = "1.0.0 Alpha"
 local FI_VERSION = version()
 local LUA_VERSION = _VERSION
+local admins = _G.CNT.Admins
+local prefixes = _G.CNT.Prefixes
+local banned = _G.CNT.Banned
 local workspace = game.Workspace
 
 --- Functions
@@ -86,7 +144,7 @@ end
 -- Otherwise, false.
 local function HasValue(check, checkValue)
     for index, value in ipairs(check) do
-        if string.lower(value) == checkValue then
+        if value:lower() == checkValue then
             return true
         end
     end
@@ -97,7 +155,7 @@ end
 -- @param Player name: The Player object of the user to be checked for being banned from the server.
 -- @return bool: If the player was banned from the game, this function returns true. Otherwise, false.
 local function IsBanned(name)
-  name = string.lower(name)
+  name = name:lower()
   if HasValue(banned, name) then
     return true
   end
@@ -361,8 +419,8 @@ commands.uninvisible["command"] = function(sender, arguments, targets)
     end
   end
 end
-commands.invisible["level"] = 3
-commands.invisible["description"] = "Removes a players invisbility."
+commands.uninvisible["level"] = 3
+commands.uninvisible["description"] = "Removes a players invisbility."
 commands.unghost = commands.uninvisible
 commands.unghostify = commands.uninvisible
 
@@ -372,7 +430,6 @@ commands.music["command"] = function(sender, arguments)
   if NoArguments(arguments) then
     return
   end
-
   local url = HasValue(arguments, "url")
   local looped = HasValue(arguments, "looped")
 
@@ -554,7 +611,7 @@ commands.valset["command"] = function(sender, arguments, targets)
     if player.leaderstats then
       for _, stat in pairs(player.leaderstats:GetDescendants()) do
         if stat:IsA("IntValue") or stat:IsA("StringValue") then
-          if stat.Name:lower():find(leaderstat:lower()) then
+          if string.find(stat.Name:lower(), leaderstat:lower()) then
             stat.Value = value
           end
         end
@@ -564,6 +621,27 @@ commands.valset["command"] = function(sender, arguments, targets)
 end
 commands.valset["level"] = 4
 commands.valset["description"] = "Sets a player's leaderstat."
+
+-- Teleports a player to another.
+commands.teleport = {}
+commands.teleport["command"] = function(sender, arguments, targets)
+  if NoArguments(arguments) then
+    return
+  end
+  local teleportDestination = arguments[2]
+  if not Players:FindFirstChild(teleportDestination) or not Players:FindFirstChild(teleportDestination).Character then
+    return
+  else
+    teleportDestination = Players:FindFirstChild(teleportDestination).Character
+    for i, v in pairs(targets) do
+      if v.Character and v.Humanoid and and v.Torso and v.Humanoid.Health > 0 then
+        v.Character.Torso.CFrame = target + Vector3.new(0, i * 5, 0)
+      end
+    end
+  end
+end
+commands.teleport["level"] = 4
+commands.teleport["description"] = "Telports a player to another."
 
 -- Command Functions
 
@@ -579,7 +657,7 @@ local function GetTargets(player, arguments)
     return {player}
   end
   for _, v in pairs(arguments) do
-    local arg = string.lower(v)
+    local arg = v:lower()
     if arg == "all" then
       for _, v in pairs(Players:GetPlayers()) do
         table.insert(targets, v)
@@ -612,7 +690,7 @@ local function GetTargets(player, arguments)
     else
       for _, arg in pairs(arguments) do
         for _, player in pairs(Players:GetPlayers()) do
-          local playerCheck = string.find(string.lower(player.Name), arg)
+          local playerCheck = string.find(player.Name:lower(), arg)
           if playerCheck then
             table.insert(targets, player)
           end
@@ -648,7 +726,7 @@ local function ParseMessage(player, message)
       table.insert(arguments, argument)
     end
     local commandName = arguments[1]
-    commandName = string.lower(commandName)
+    commandName = commandName:lower()
     if commands[commandName] == nil then
       return
     end
@@ -681,7 +759,7 @@ end
 --- Shuts down the current instance CNT is running on.
 -- @param reason string: The reason why the instance had to be shutdown.
 -- TODO: Send information to a website with information on the instance and the reason during shutdown.
--- Also TODO: Use the reason parameter.
+-- TODO: Use the reason parameter.
 local function ShutDown(reason)
   for _, player in pairs(Players:GetPlayers()) do
     player:Destroy()
@@ -697,7 +775,7 @@ end
 
 --- Connections
 local function OnPlayerAdded(player)
-  if IsBanned(player.Name) or SERVER_LOCKED then
+  if IsBanned(player.Name) or SERVER_LOCKED and not IsAdmin(player.Name) then
     player:Destroy()
   end
   player.Chatted:connect(function(message)
@@ -717,10 +795,15 @@ anticheat.Disabled = false
 anticheat.Changed:connect(function()
   ShutDown()
 end)
-
-if INFECTED then
-  game:WaitForChild("Scan").Disabled = false
-end
 ]]
 
-print("CNT v".. CNT_VERSION .." has loaded!")
+if INFECTED then
+  _G.CNT.AV.Quarantine = QUARANTINE
+  _G.CNT.AV.Names = NAMES
+  _G.CNT.AV.Classes = CLASSES
+  _G.CNT.AV.Scanning = TO_SCAN
+  game:WaitForChild("Scan").Disabled = false
+end
+
+
+print("CNT v".. CNT_VERSION .." has loaded! (FI: ".. FI_VERSION ..", LUA: ".. LUA_VERSION ..")")
