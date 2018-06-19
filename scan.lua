@@ -21,10 +21,10 @@ for _, scanning in pairs(TO_SCAN) do
         if object:IsA(class) then
           if QUARANTINE then
             object.Parent = Lighting
-            warn("CNT: AV: Quarantined (moved to Lighting) object \"".. object.Name .."\" because of it's class (\"".. object.ClassName .."\"). Object's parent was \"".. object.Parent .."\".")
+            warn("CNT: AV: Quarantined (moved to Lighting) object \"".. object.Name .."\" because of it's class (\"".. object.ClassName .."\"). Object's parent was \"".. object.Parent.Name .."\".")
           else
             object:Destroy()
-            warn("CNT: AV: Removed object \"".. object.Name .."\" because of it's class (\"".. object.ClassName .."\"). Object's parent was \"".. object.Parent .."\".")
+            warn("CNT: AV: Removed object \"".. object.Name .."\" because of it's class (\"".. object.ClassName .."\"). Object's parent was \"".. object.Parent.Name .."\".")
           end
         end
       end
@@ -32,10 +32,10 @@ for _, scanning in pairs(TO_SCAN) do
         if string.find(name:lower(), object.Name:lower()) then
           if QUARANTINE then
             object.Parent = Lighting
-            warn("CNT: AV: Quarantined (moved to Lighting) object \"".. object.Name .."\" because of it's name. Object's class was \"".. object.ClassName .."\" and parent was \"".. object.Parent .."\".")
+            warn("CNT: AV: Quarantined (moved to Lighting) object \"".. object.Name .."\" because of it's name. Object's class was \"".. object.ClassName .."\" and parent was \"".. object.Parent.Name .."\".")
           else
             object:Destroy()
-            warn("CNT: AV: Removed object \"".. object.Name .."\" because of it's name. Object's class was \"".. object.ClassName .."\" and parent was \"".. object.Parent .."\".")
+            warn("CNT: AV: Removed object \"".. object.Name .."\" because of it's name. Object's class was \"".. object.ClassName .."\" and parent was \"".. object.Parent.Name .."\".")
           end
         end
       end

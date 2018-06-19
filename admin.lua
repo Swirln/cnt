@@ -634,7 +634,7 @@ commands.teleport["command"] = function(sender, arguments, targets)
   else
     teleportDestination = Players:FindFirstChild(teleportDestination).Character
     for i, v in pairs(targets) do
-      if v.Character and v.Humanoid and and v.Torso and v.Humanoid.Health > 0 then
+      if v.Character and v.Humanoid and v.Torso and v.Humanoid.Health > 0 then
         v.Character.Torso.CFrame = target + Vector3.new(0, i * 5, 0)
       end
     end
