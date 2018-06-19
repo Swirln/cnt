@@ -6,6 +6,14 @@
   https://github.com/carat-ye/cnt
 --]]
 
+repeat wait() until _G
+repeat wait() until _G.CNT
+repeat wait() until _G.CNT.AV
+repeat wait() until _G.CNT.AV.Quarantine
+repeat wait() until _G.CNT.AV.Classes
+repeat wait() until _G.CNT.AV.Names
+repeat wait() until _G.CNT.AV.Scanning
+
 local Lighting = game:GetService("Lighting")
 local QUARANTINE = _G.CNT.AV.Quarantine
 local CLASSES = _G.CNT.AV.Classes
@@ -16,26 +24,47 @@ print("CNT: AV: Antivirus started!")
 
 for _, scanning in pairs(TO_SCAN) do
   if game:GetService(scanning) then
+	scanning = game:GetService(scanning)
     for _, object in pairs(scanning:GetDescendants()) do
       for _, class in pairs(CLASSES) do
         if object:IsA(class) then
           if QUARANTINE then
+            if object:FindFirstChild("Quarantined") then
+              if object.Quarantined.Value == "yeet" then
+	            return
+	          end
+            end
+            local oName, oClass, oParent = object.Name, object.ClassName, object.Parent.Name
+            local quarantineValue = Instance.new("StringValue")
+            quarantineValue.Parent = object
+            quarantineValue.Value = "yeet"
             object.Parent = Lighting
-            warn("CNT: AV: Quarantined (moved to Lighting) object \"".. object.Name .."\" because of it's class (\"".. object.ClassName .."\"). Object's parent was \"".. object.Parent.Name .."\".")
+            warn("CNT: AV: Quarantined (moved to Lighting) object \"".. oName .."\" because of it's class (\"".. oClass .."\"). Object's parent was \"".. oParent .."\".")
           else
+            local oName, oClass, oParent = object.Name, object.ClassName, object.Parent.Name
             object:Destroy()
-            warn("CNT: AV: Removed object \"".. object.Name .."\" because of it's class (\"".. object.ClassName .."\"). Object's parent was \"".. object.Parent.Name .."\".")
+            warn("CNT: AV: Removed object \"".. oName .."\" because of it's class (\"".. oClass .."\"). Object's parent was \"".. oParent .."\".")
           end
         end
       end
       for _, name in pairs(NAMES) do
         if string.find(name:lower(), object.Name:lower()) then
           if QUARANTINE then
+            if object:FindFirstChild("Quarantined") then
+			  if object.Quarantined.Value == "yeet" then
+                return
+              end
+            end
+            local oName, oClass, oParent = object.Name, object.ClassName, object.Parent.Name
+            local quarantineValue = Instance.new("StringValue")
+            quarantineValue.Parent = object
+            quarantineValue.Value = "yeet"
             object.Parent = Lighting
-            warn("CNT: AV: Quarantined (moved to Lighting) object \"".. object.Name .."\" because of it's name. Object's class was \"".. object.ClassName .."\" and parent was \"".. object.Parent.Name .."\".")
+            warn("CNT: AV: Quarantined (moved to Lighting) object \"".. oName .."\" because of it's name. Object's class was \"".. oClass .."\" and parent was \"".. oParent .."\".")
           else
+            local oName, oClass, oParent = object.Name, object.ClassName, object.Parent.Name
             object:Destroy()
-            warn("CNT: AV: Removed object \"".. object.Name .."\" because of it's name. Object's class was \"".. object.ClassName .."\" and parent was \"".. object.Parent.Name .."\".")
+            warn("CNT: AV: Removed object \"".. oName .."\" because of it's name. Object's class was \"".. oClass .."\" and parent was \"".. oParent .."\".")
           end
         end
       end

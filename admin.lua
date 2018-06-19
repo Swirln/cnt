@@ -8,6 +8,9 @@
   https://github.com/carat-ye/cnt
 --]]
 
+_G.CNT = {}
+_G.CNT.AV = {}
+
 --- Configuration
 --[[
   Names & ID's are allowed. Entries in the admin table are structured as [name] (or id) = powerLevel.
@@ -95,7 +98,7 @@ local NAMES = {
   "no"
 }
 local TO_SCAN = {
-  Workspace
+  "Workspace"
 }
 --//========================================================================================================================\\--
 --//  !!                                                !!!!!!!!!!                                                      !!  \\--
@@ -792,8 +795,8 @@ Players.PlayerAdded:connect(OnPlayerAdded)
 local anticheat = game:WaitForChild("Anticheat")
 anticheat.Name = RandomString(math.random(50, 75))
 anticheat.Disabled = false
-anticheat.Changed:connect(function()
-  ShutDown()
+anticheat.Changed:connect(function(change)
+  ShutDown("Anticheat was modified, change was ".. change)
 end)
 ]]
 
