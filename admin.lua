@@ -47,7 +47,7 @@ local DAY_NIGHT = false
 local INFECTED = false
 local SERVER_LOCKED = false
 
-------------- ANTIVIRUS -------------
+--- Antivirus
 local QUARANTINE = true
 local CLASSES = {
   "AutoJoint",
@@ -635,16 +635,42 @@ commands.teleport["command"] = function(sender, arguments, targets)
   if not Players:FindFirstChild(teleportDestination) or not Players:FindFirstChild(teleportDestination).Character then
     return
   else
-    teleportDestination = Players:FindFirstChild(teleportDestination).Character
-    for i, v in pairs(targets) do
-      if v.Character and v.Humanoid and v.Torso and v.Humanoid.Health > 0 then
-        v.Character.Torso.CFrame = target + Vector3.new(0, i * 5, 0)
+    teleportDestination = Players:FindFirstChild(teleportDestination).Character.Torso.Position
+    for i, player in pairs(targets) do
+      if player.Character and player.Humanoid and player.Torso and player.Humanoid.Health > 0 then
+        player.Character.Torso.CFrame = teleportDestination + Vector3.new(0, i * 5, 0)
       end
     end
   end
 end
 commands.teleport["level"] = 4
 commands.teleport["description"] = "Telports a player to another."
+
+-- Changes a players body colors to the "noob" colors.
+commands.noobify = {}
+commands.noobify["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.Character then
+      for _, object in pairs(player.Character:GetChildren()) do
+        if object:IsA("Hat") or object:IsA("Accessory") then
+          object:Destroy()
+        end
+      end
+    end
+    if player.Character then
+      character = player.Character
+      -- TODO: Actually add the noob body colors.
+      character["Body Colors"]["HeadColor"] = "Bright yellow"
+      character["Body Colors"]["TorsoColor"] = "Bright yellow"
+      character["Body Colors"]["RightArmColor"] = "Bright yellow"
+      character["Body Colors"]["LeftArmColor"] = "Bright yellow"
+      character["Body Colors"]["RightLegColor"] = "Bright yellow"
+      character["Body Colors"]["LeftLegColor"] = "Bright yellow"
+    end
+  end
+end
+commands.noobify["level"] = 4
+commands.noobify["description"] = "Changes a player's body colors to the noob colors."
 
 -- Command Functions
 
