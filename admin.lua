@@ -68,6 +68,7 @@ local CLASSES = {
   "VelocityMotor",
   "Geometry",
   "Timer",
+  "Weld",
   "ChangeHistoryService"
 }
 local NAMES = {
@@ -659,18 +660,110 @@ commands.noobify["command"] = function(sender, arguments, targets)
     end
     if player.Character then
       character = player.Character
-      -- TODO: Actually add the noob body colors.
-      character["Body Colors"]["HeadColor"] = "Bright yellow"
-      character["Body Colors"]["TorsoColor"] = "Bright yellow"
-      character["Body Colors"]["RightArmColor"] = "Bright yellow"
-      character["Body Colors"]["LeftArmColor"] = "Bright yellow"
-      character["Body Colors"]["RightLegColor"] = "Bright yellow"
-      character["Body Colors"]["LeftLegColor"] = "Bright yellow"
+      character["Body Colors"]["HeadColor"] = BrickColor.new("Bright yellow")
+      character["Body Colors"]["TorsoColor"] = BrickColor.new("Bright blue")
+      character["Body Colors"]["RightArmColor"] = BrickColor.new("Bright yellow")
+      character["Body Colors"]["LeftArmColor"] = BrickColor.new("Bright yellow")
+      character["Body Colors"]["RightLegColor"] = BrickColor.new("Olive green")
+      character["Body Colors"]["LeftLegColor"] = BrickColor.new("Olive green")
     end
   end
 end
 commands.noobify["level"] = 4
 commands.noobify["description"] = "Changes a player's body colors to the noob colors."
+commands.noob = commands.noobify
+
+-- Blinds a player.
+commands.blind = {}
+commands.blind["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.PlayerGui and not player.PlayerGui:FindFirstChild("blindGui") then
+      -- TODO: Have a premade GUI in the script.
+      local blindGui = Instance.new("ScreenGui")
+      blindGui.Name = "blindGui"
+      blindGui.Parent = player.PlayerGui
+      local blindFrame = Instance.new("Frame")
+      blindFrame.Size = UDim2.new(1, 0, 1, 0)
+      blindFrame.BorderSizePixel = 0
+      blindFrame.ZIndex = 10
+      blindFrame.Parent = blindGui
+    end
+  end
+end
+commands.blind["level"] = 4
+commands.blind["description"] = "Makes a player blind."
+
+-- Unblinds a player.
+commands.unblind = {}
+commands.unblind["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.PlayerGui and player.PlayerGui:FindFirstChild("blindGui") then
+       player.PlayerGui:FindFirstChild("blindGui"):Destroy()
+    end
+  end
+end
+commands.unblind["level"] = 4
+commands.unblind["description"] = "Makes a player able to see again."
+
+-- Controls a player.
+commands.control = {}
+commands.control["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.Character and sender.Character and sender.Character.Head then
+      player.Character.Humanoid.PlatformStand = true
+      player.Character.Humanoid.Changed:connect(function()
+        player.Character.Humanoid.PlatformStand = true
+      end)
+      for _, object in pairs(sender.Character:GetChildren()) do
+        if object:IsA("BasePart") then
+          for _, object_ in pairs(player.Character:GetChildren()) do
+            if object_:IsA("BasePart") then
+              local weld = Instance.new("Weld")
+              weld.Part0 = object_
+              weld.Part1 = object
+              object_.CanCollide = false
+              object_.Transparency = 1
+            end
+          end
+        elseif object:IsA("Hat") or object:IsA("Accessory") then
+          object:Destroy()
+        end
+      end
+      sender.Character.Head.face:Destroy()
+    end
+  end
+end
+commands.control["level"] = 4
+commands.control["description"] = "Controls a player."
+
+
+-- Sets a players gravity.
+commands.gravity = {}
+commands.gravity["command"] = function(sender, arguments, targets)
+  local gravity = arguments[2]
+  for _, player in pairs(targets) do
+    if player.Character and player.Character:FindFirstChild("Torso") then
+      for _, object in pairs(player.Character.Torso:GetChildren()) do
+        if object.Name == "CNTForce" then
+          object:Destroy()
+        end
+      end
+      local bodyForce = Instance.new("BodyForce")
+      bodyForce.Name = "CNTForce"
+      bodyForce.Parent = player.Character.Torso
+      bodyForce.Force = Vector3.new(0, 0, 0)
+      for _, part in pairs(player.Character:GetChildren()) do
+        if part:IsA("Part") then
+          bodyForce.Force = bodyForce.Force - Vector3.new(0, part:GetMass() * gravity, 0)
+        elseif part:IsA("Hat") or part:IsA("Accessory") and part:FindFirstChild("Handle") then
+          bodyForce.force = bodyForce.force - Vector3.new(0, part.Handle:GetMass() * gravity, 0)
+        end
+      end
+    end
+  end
+end
+commands.gravity["level"] = 4
+commands.gravity["description"] = "Sets a players gravity."
 
 -- Command Functions
 
