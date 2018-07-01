@@ -76,23 +76,31 @@ local prefixes = { -- Admin prefixes, e.g "<prefix>kill EnergyCell"
 ```
 You can add prefixes the same way you'd add banned users or admins.
 ### Adding Commands
-Advanced users may want to extend CNT's functionality by adding commands.
-* Scroll down to the point in the script which says this:
+Advanced users may want to extend CNT's functionality by adding commands.<br><br>
+To add commands, scroll down to the point in the script which says this:
 ```lua
 local commands = {}
 ```
-* Commands are written like this:
+Commands are written like this:
 ```lua
--- commandName represents the name of the command.
-commands.commandName = {}
-commands.commandName["command"] = function(sender, arguments, targets) -- Add the target argument if your command needs to target players.
-  print("Hello world!")
+-- Kills a player.
+commands.kill = {}
+commands.kill["command"] = function(sender, arguments, targets) -- sender is a Player object, arguments is a string table and targets is a Player table
+  if NoArguments(arguments) then
+    return
+  end
+  for _, player in pairs(targets) do -- for every player in targets do
+    if player.Character and player.Character.Humanoid.Health > 0 then -- if players character exists and player is alive
+      player.Character:BreakJoints() -- kill player
+    end
+  end
 end
-commands.commandName["level"] = 5
-commands.commandName["description"] = "This is my command."
+commands.kill["level"] = 4 -- level the command is at, more about levels below
+commands.kill["description"] = "Kills a player by breaking their joints." -- description of the command
+commands.murder = commands.kill -- alias for the command (not necessary)
 ```
-The above command, when executed using `<prefix>command`, should print "Hello world!" to console.<br><br>
-Functions are also fully documented in the code, for anyone who would like to add more than just commands.
+The above command, when executed using `<prefix>kill <player>` will kill the player you chose. <br><br>
+Functions are also fully documented in the code for anyone who would like to add more than just commands.
 ## Authors
 * **Carrot** - *Developer* - [carat-ye](https://github.com/carat-ye)
 * **Niall** - *Developer* - [Niall-R](https://github.com/Niall-R)

@@ -48,6 +48,7 @@ local DAY_NIGHT_INTERVAL = .2
 local DAY_NIGHT = false
 local INFECTED = false
 local SERVER_LOCKED = false
+local MESSAGE_TIMEOUT = 5
 
 --- Antivirus
 local QUARANTINE = true
@@ -87,7 +88,9 @@ local NAMES = {
   "virus",
   "xd",
   "infected",
-  "oh snap",
+  "oh",
+  "snap",
+  "vir",
   "virisis",
   "snapreducer",
   "viris",
@@ -131,7 +134,7 @@ local characters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", 
 local function RandomString(length)
   if length > 0 then
     local random = {}
-    for i  = 1, length do
+    for i = 1, length do
       table.insert(random, characters[math.random(#characters)])
     end
     return table.concat(random, "")
@@ -146,12 +149,12 @@ end
 -- @return bool: Whether it could find the value in the table. If it does, then it's true.
 -- Otherwise, false.
 local function HasValue(check, checkValue)
-    for index, value in ipairs(check) do
-        if value:lower() == checkValue then
-            return true
-        end
+  for index, value in ipairs(check) do
+    if value:lower() == checkValue then
+      return true
     end
-    return false
+  end
+  return false
 end
 
 --- Checks if a user is banned.
@@ -187,6 +190,53 @@ local function ReturnIndexOf(seeking, value)
       return index
     end
   end
+end
+
+--- Creates a message GUI on all the users screens.
+-- @param string message: The message.
+-- @param number countdown: The time the message appears on screen. If not specified, there is no countdown.
+-- @param Player announcer: The person initiating the message. If not specified, the user details don't show.
+local function ServerMessage(message, countdown, announcer)
+  local NewMessage = function()
+    local messageGui = Instance.new("ScreenGui")
+    local messageFrame = Instance.new("Frame")
+    messageFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+    messageFrame.BorderSizePixel = 0
+    messageFrame.BackgroundTransparency = 0.5
+    messageFrame.Size = UDim2.new(1, 0, 1, 0)
+    local messageTextBox = Instance.new("TextLabel")
+    messageTextBox.BackgroundTransparency = 1
+    messageTextBox.Size = UDim2.new(1, 0, 1, 0)
+    messageTextBox.Text = message
+    messageTextBox.TextScaled = true
+    messageTextBox.TextColor3 = Color3.new(1, 1, 1)
+    if countdown ~= nil and tonumber(countdown) ~= nil then
+      local messageTimeText = Instance.new("TextLabel")
+      messageTimeText.BackgroundTransparency = 1
+      messageTimeText.Size = UDim2.new(1, 0, 0.15, 0)
+      messageTimeText.TextScaled = true
+      messageTimeText.TextColor3 = Color3.new(1, 1, 1)
+      messageTimeText.Text = countdown
+      Spawn(function()
+        Debris:AddItem(messageGui, countdown)
+        for i = countdown, 0, -1 do
+          wait(1)
+          countdown = countdown - 1
+          messageTimeText.Text = countdown
+        end
+      end)
+      messageTimeText.Parent = messageFrame
+    else
+      Spawn(function()
+        Debris:AddItem(messageGui, MESSAGE_TIMEOUT)
+      end)
+    end
+    messageTextBox.Parent = messageFrame
+    messageFrame.Parent = messageGui
+    return messageGui
+  end
+  local message = NewMessage()
+  return message
 end
 
 --- Finds if a string starts with a certain character.
@@ -740,6 +790,40 @@ commands.blind["command"] = function(sender, arguments, targets)
 end
 commands.blind["level"] = 4
 commands.blind["description"] = "Makes a player blind."
+
+-- Sends a server message.
+commands.m = {}
+commands.m["command"] = function(sender, arguments)
+  local message = arguments[1]
+  local gui = ServerMessage(message, nil, sender)
+  for _, player in pairs(Players:GetPlayers()) do
+    if player.PlayerGui then
+      local newGui = gui:Clone()
+      newGui.Parent = player.PlayerGui
+    end
+  end
+  gui:Destroy()
+end
+commands.m["level"] = 3
+commands.m["description"] = "Server message. What did you expect?"
+commands.message = commands.m
+
+-- Whispers a message.
+commands.w = {}
+commands.w["command"] = function(sender, arguments, targets)
+  local message = arguments[2]
+  local gui = ServerMessage(message, nil, sender)
+  for _, player in pairs(targets) do
+    if player.PlayerGui then
+      local newGui = gui:Clone()
+      newGui.Parent = player.PlayerGui
+    end
+  end
+end
+commands.w["level"] = 4
+commands.w["description"] = "Sends a private message."
+commands.whisper = commands.w
+commands.pm = commands.w
 
 -- Unblinds a player.
 commands.unblind = {}
