@@ -33,7 +33,7 @@ local admins = {
 local banned = {  -- List players that are banned from your game here.
   "dap300",
 }
-local prefixes = { -- Admin prefixes, e.g "<prefix>kill EnergyCell"
+local prefixes = { -- Admin prefixes, e.g "<prefix>kill Carrot"
   ":",
   ";",
   "@",
@@ -118,7 +118,7 @@ local Players = game:GetService("Players")
 local Debris = game:GetService("Debris")
 local Lighting = game:GetService("Lighting")
 local CNT_VERSION = "1.0.0 Alpha"
-local FI_VERSION = version()
+local CLIENT_VERSION = version()
 local LUA_VERSION = _VERSION
 local workspace = game.Workspace
 
@@ -1017,6 +1017,12 @@ local function GetTargets(player, arguments)
         end
       end
       return targets
+    elseif arg == "random" then
+      local players = Players:GetPlayers()
+      randomIndex = math.random()
+      local selectedPlayer = players[randomIndex]
+      table.insert(targets, selectedPlayer)
+      return targets
     else
       for _, arg in pairs(arguments) do
         for _, player in pairs(Players:GetPlayers()) do
@@ -1137,4 +1143,4 @@ if INFECTED then
   game:WaitForChild("Scan").Disabled = false
 end
 
-print("CNT v".. CNT_VERSION .." has loaded! (FI: ".. FI_VERSION ..", LUA: ".. LUA_VERSION ..")")
+print("CNT v".. CNT_VERSION .." has loaded! (CLIENT: ".. VERSION ..", LUA: ".. LUA_VERSION ..")")
