@@ -25,7 +25,6 @@
 ## Usage
 Customization instructions can be found on the [Usage Guide](https://github.com/carrot512/cnt/wiki/Usage-Guide) on the Wiki.
 
-
 ## Authors
 * **Carrot** - Developer - [carrot512](https://github.com/carrot512)
 * **Niall** - Developer - [Niall-R](https://github.com/Niall-R)
