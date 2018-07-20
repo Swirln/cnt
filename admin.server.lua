@@ -3,11 +3,10 @@
   Description: The main admin commands for CNT. This also acts like the parent for
                all the other scripts like the anticheat and antivirus and contains
                all the configuration.
-  Authors: Niall, Carrot
+  Authors: Niall, Carrot, Quin
   Date: 6/16/2018 @ 5:15 PM CST (11:15 PM GMT)
   https://github.com/carat-ye/cnt
 --]]
-math.randomseed(tick())
 
 _G.CNT = {}
 _G.CNT.AV = {}
@@ -77,13 +76,12 @@ local CLASSES = {
 }
 local NAMES = {
   "infection",
-  "tion",
   "lol",
   "wut",
   "hoo",
   "you",
-  "hack",
   "got",
+  "hack",
   "vaccine",
   "virise",
   "virus",
@@ -104,9 +102,11 @@ local NAMES = {
   "ohai",
   "no",
 }
+
 local TO_SCAN = {
   "Workspace",
 }
+
 --//========================================================================================================================\\--
 --//  !!                                                !!!!!!!!!!                                                      !!  \\--
 --//           We are not responsible for the script not working if you modify anything beyond this point.                  \\--
@@ -115,15 +115,22 @@ local TO_SCAN = {
 
 --- Declarations
 -- Declaration order: services, strings, numbers, bools
+local workspace = game.Workspace
 local Players = game:GetService("Players")
 local Debris = game:GetService("Debris")
 local Lighting = game:GetService("Lighting")
-local CNT_VERSION = "1.0.0 Alpha"
+local CNT_VERSION = "1.0.0 Early Alpha"
 local CLIENT_VERSION = version()
 local LUA_VERSION = _VERSION
-local workspace = game.Workspace
 
 --- Functions
+
+--- Deletes an object.
+-- @param Instance object: The object to be removed.
+local function Destroy(instance)
+  Debris:AddItem(instance, 0)
+end
+
 -- Random string generation.
 local characters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x",
                     "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V",
@@ -193,7 +200,7 @@ local function ReturnIndexOf(seeking, value)
   end
 end
 
---- Creates a message GUI on all the users screens.
+--- Creates a message GUI.
 -- @param string message: The message.
 -- @param number countdown: The time the message appears on screen. If not specified, there is no countdown.
 -- @param Player announcer: The person initiating the message. If not specified, the user details don't show.
@@ -218,8 +225,8 @@ local function ServerMessage(message, countdown, announcer)
       messageTimeText.TextScaled = true
       messageTimeText.TextColor3 = Color3.new(1, 1, 1)
       messageTimeText.Text = countdown
+      Debris:AddItem(messageGui, countdown)
       Spawn(function()
-        Debris:AddItem(messageGui, countdown)
         for i = countdown, 0, -1 do
           wait(1)
           countdown = countdown - 1
@@ -228,9 +235,7 @@ local function ServerMessage(message, countdown, announcer)
       end)
       messageTimeText.Parent = messageFrame
     else
-      Spawn(function()
-        Debris:AddItem(messageGui, MESSAGE_TIMEOUT)
-      end)
+      Debris:AddItem(messageGui, MESSAGE_TIMEOUT)
     end
     messageTextBox.Parent = messageFrame
     messageFrame.Parent = messageGui
@@ -345,7 +350,7 @@ commands.lockserver["command"] = function(sender, arguments)
   if not SERVER_LOCKED then
     SERVER_LOCKED = true
     if workspace:FindFirstChild("ServerLockMessage") then
-      workspace.ServerLockMessage:Destroy()
+      Destroy(workspace.ServerLockMessage)
     end
     local display = Instance.new("Hint")
     display.Name = "ServerLockMessage"
@@ -370,7 +375,7 @@ commands.unlockserver["command"] = function(sender, arguments)
   if SERVER_LOCKED then
     SERVER_LOCKED = false
     if workspace:FindFirstChild("ServerLockMessage") then
-      workspace.ServerLockMessage:Destroy()
+      Destroy(workspace.ServerLockMessage)
     end
     local display = Instance.new("Hint")
     display.Name = "ServerLockMessage"
@@ -493,7 +498,7 @@ commands.music["command"] = function(sender, arguments)
   for _, object in pairs(workspace:GetChildren()) do
     if object:IsA("Sound") then
       object:Stop()
-      object:Destroy()
+      Destroy(object)
     end
   end
 
@@ -518,7 +523,7 @@ commands.music["command"] = function(sender, arguments)
     music:Play()
   until music.IsPlaying
 
-  status:Destroy()
+  Destroy(status)
 end
 commands.music["level"] = 3
 commands.music["description"] = "Plays music."
@@ -542,7 +547,7 @@ commands.modifycommand["description"] = "Modifies a command's power level."
 commands.kick = {}
 commands.kick["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
-    player:Destroy()
+    Destroy(player)
   end
 end
 commands.kick["level"] = 3
@@ -553,12 +558,9 @@ commands.kick["description"] = "Kicks a player from the game."
 commands.ban = {}
 commands.ban["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
-    if admins[player.Name] and admins[player.Name] > admins[sender.Name] then
+    if admins[player.Name] and admins[player.Name] > admins[sender.Name] or not admins[player.Name] then
       table.insert(banned, player)
-      player:Destroy()
-    elseif not admins[player.Name] then
-      table.insert(banned, player)
-      player:Destroy()
+      Destroy(player)
     end
   end
 end
@@ -744,7 +746,7 @@ commands.mortalize["command"] = function(sender, arguments, targets)
   end
 end
 commands.mortalize["level"] = 4
-commands.mortalize["description"] = "Immortalizes a player."
+commands.mortalize["description"] = "Mortalizes a player."
 commands.ungod = commands.mortalize
 commands.mortalise = commands.mortalize
 
@@ -755,7 +757,7 @@ commands.noobify["command"] = function(sender, arguments, targets)
     if player.Character and player.Character:FindFirstChild("Head") and player.Character.Head:FindFirstChild("face") and player.Character:FindFirstChild("Body Colors") then
       for _, object in pairs(player.Character:GetChildren()) do
         if object:IsA("Hat") or object:IsA("Accessory") or string.find(object.ClassName:lower(), "shirt") or object:IsA("Pants") then
-          object:Destroy()
+          Destroy(object)
         end
       end
       local character = player.Character
@@ -803,11 +805,38 @@ commands.m["command"] = function(sender, arguments)
       newGui.Parent = player.PlayerGui
     end
   end
-  gui:Destroy()
+  Destroy(gui)
 end
 commands.m["level"] = 3
 commands.m["description"] = "Server message. What did you expect?"
 commands.message = commands.m
+
+-- Creates a hint.
+commands.h = {}
+commands.h["command"] = function(sender, arguments)
+  if workspace:FindFirstChild("CNTHint") then
+    Destroy(workspace.CNTHint)
+  end
+
+  local message = arguments[1]
+  local time = 0
+  if #arguments > 1 then
+    local time = arguments[2]
+  end
+  local hint = Instance.new("Hint")
+  hint.Name = "CNTHint"
+  hint.Text = message
+  hint.Parent = workspace
+  if time and tonumber(time) ~= nil then
+    if time >= 1 then
+      Debris:AddItem(hint, time)
+    end
+  end
+end
+commands.h["level"] = 3
+commands.h["description"] = "Creates a hint."
+commands.hint = commands.h
+
 
 -- Whispers a message.
 commands.w = {}
@@ -831,7 +860,7 @@ commands.unblind = {}
 commands.unblind["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.PlayerGui and player.PlayerGui:FindFirstChild("CNDBlindGui") then
-       player.PlayerGui:FindFirstChild("CNTBlindGui"):Destroy()
+       Destroy(player.PlayerGui:FindFirstChild("CNTBlindGui"))
     end
   end
 end
@@ -860,11 +889,11 @@ commands.control["command"] = function(sender, arguments, targets)
             end
           end
         elseif object:IsA("Hat") or object:IsA("Accessory") then
-          object:Destroy()
+          Destroy(object)
         end
       end
       if sender.Character.Head:FindFirstChild("face") then
-        sender.Character.Head.face:Destroy()
+        Destroy(sender.Character.Head.face)
       end
     end
   end
@@ -932,7 +961,7 @@ commands.unforcefield["command"] = function(sender, arguments, targets)
     if player.Character then
       for _, object in pairs(player.Character:GetChildren()) do
         if object:IsA("ForceField") or object.Name == "CNTForcefield" then
-          object:Destroy()
+          Destroy(object)
         end
       end
     end
@@ -950,7 +979,7 @@ commands.gravity["command"] = function(sender, arguments, targets)
     if player.Character and player.Character:FindFirstChild("Torso") then
       for _, object in pairs(player.Character.Torso:GetChildren()) do
         if object.Name == "CNTForce" then
-          object:Destroy()
+          Destroy(object)
         end
       end
       local bodyForce = Instance.new("BodyForce")
@@ -1001,9 +1030,9 @@ commands.rocket["command"] = function(sender, arguments, targets)
       Delay(3, function()
         local explosion = Instance.new("Explosion")
         explosion.BlastRadius = 10
-        thrust:Destroy()
+        Destroy(thrust)
         explosion.Position = rocket.Position
-        rocket:Destroy()
+        Destroy(rocket)
         local humanoid = player.Character:FindFirstChild("Humanoid")
         if humanoid then
           humanoid.Health = 0
@@ -1127,7 +1156,7 @@ local function ParseMessage(player, message)
     if commandFunction ~= nil and powerLevel <= commands[commandName]["level"] then
       print("CNT: Executing command \"".. commandName .."\" with arguments \"".. table.concat(arguments, " ") .. "\" with targets \"" .. table.concat(targetNames, " ") .. "\"")
       Spawn(function()
-        local success, err = pcall(function()
+        local success, fail = pcall(function()
           commandFunction(player, arguments, targets)
         end)
         if not success then
@@ -1144,7 +1173,7 @@ end
 -- TODO: Use the reason parameter.
 local function ShutDown(reason)
   for _, player in pairs(Players:GetPlayers()) do
-    player:Destroy()
+    Destroy(player)
     SERVER_LOCKED = true
   end
 end
@@ -1160,7 +1189,7 @@ end
 local function OnPlayerAdded(player)
   -- loadstring(anticheatHelper)()
   if IsBanned(player.Name) or SERVER_LOCKED and not IsAdmin(player.Name) then
-    player:Destroy()
+    Destroy(player)
   end
   player.Chatted:connect(function(message)
     if IsAdmin(player) then

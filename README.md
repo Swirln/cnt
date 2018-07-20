@@ -18,7 +18,7 @@
 
 ### Downloading from Release
 
-- Download the latest release from [Releases](https://github.com/carat-ye/cnt/releases).
+- Download the latest release from [Releases](https://github.com/carrot512/cnt/releases).
 - Extract the release zip file.
 - Click "Insert" on the menu bar and then click "Insert Model..."
 - Choose the `rbxm` in the extracted zip and click OK.
@@ -32,7 +32,9 @@ Customization instructions can be found on the [Usage Guide](https://github.com/
 
 - **Carrot** - Developer - [carrot512](https://github.com/carrot512)
 - **Niall** - Developer - [Niall-R](https://github.com/Niall-R)
+- **Quin** - Developer - [quinl](https://github.com/quinl)
 
 ## License
 
 CNT is available under the GNU Affero General Public License v3.0. See [LICENSE](LICENSE) for details.
+If you modify CNT or use it, please credit us (Carrot & Niall) and open source your modifications so we can make our code better. Thank you!
