@@ -37,4 +37,5 @@ Customization instructions can be found on the [Usage Guide](https://github.com/
 ## License
 
 CNT is available under the GNU Affero General Public License v3.0. See [LICENSE](LICENSE) for details.
-If you modify CNT or use it, please credit us (Carrot & Niall) and open source your modifications so we can make our code better. Thank you!
+
+If you modify CNT or use it, please credit us (Carrot, Niall & Quin) and open source your modifications so we can make our code better. Thank you!
