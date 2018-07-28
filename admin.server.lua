@@ -209,18 +209,6 @@ local function Starts(string, starting)
   return string.sub(string, 1, string.len(starting)) == starting
 end
 
---- Checks if the arguments are either empty or don't exist.
--- @param table arguments: The arguments to be checked.
--- @return bool: If there were no arguments in the table specified, this returns true. Otherwise, false.
-local function NoArguments(arguments)
-    for _, arg in pairs(arguments) do
-      if arg == nil then
-        return true
-      end
-  end
-end
-
-
 --- Gets the version and returns it in number format.
 -- @return number version: The version.
 local function GetVersion()
@@ -239,18 +227,16 @@ local function GetVersion()
   return tonumber(version)
 end
 
+--- New Version Check
+_G.CNT.NewVersion = (GetVersion() >= 2810)   
+
 --- Commands
--- TODO: Shorten descriptions.
 local commands = {}
 
 -- Prints the arguments to console with the sender's name.
 commands.print = {}
 commands.print["name"] = "print"
 commands.print["command"] = function(sender, arguments)
-  if NoArguments(arguments) then
-    return
-  end
-
   local message = table.concat(arguments, " ")
   print(sender.Name .. ": " .. message)
 end
@@ -261,9 +247,6 @@ commands.print["description"] = "Prints the arguments to console."
 commands.kill = {}
 commands.kill["name"] = "kill"
 commands.kill["command"] = function(sender, arguments, targets)
-  if NoArguments(arguments) then
-    return
-  end
   for _, player in pairs(targets) do
     if player.Character and player.Character.Humanoid.Health > 0 then
       player.Character:BreakJoints()
@@ -278,10 +261,6 @@ commands.murder = commands.kill
 commands.sparkles = {}
 commands.sparkles["name"] = "sparkles"
 commands.sparkles["command"] = function(sender, arguments, targets)
-  if NoArguments(arguments) then
-    return
-  end
-
   for _, player in pairs(targets) do
     if player.Character and player.Character.Torso then
       local sparkles = Instance.new("Sparkles")
@@ -296,10 +275,6 @@ commands.sparkles["description"] = "Adds sparkles to a player's torso."
 commands.fire = {}
 commands.fire["name"] = "fire"
 commands.fire["command"] = function(sender, arguments, targets)
-  if NoArguments(arguments) then
-    return
-  end
-
   for _, player in pairs(targets) do
     if player.Character and player.Character.Torso then
       local fire = Instance.new("Fire")
@@ -314,10 +289,6 @@ commands.fire["description"] = "Adds fire to a player's torso."
 commands.smoke = {}
 commands.smoke["name"] = "smoke"
 commands.smoke["command"] = function(sender, arguments, targets)
-  if NoArguments(arguments) then
-    return
-  end
-
   for _, player in pairs(targets) do
     if player.Character and player.Character.Torso then
       local smoke = Instance.new("Smoke")
@@ -383,10 +354,6 @@ commands.unslock = commands.unlockserver
 commands.freeze = {}
 commands.freeze["name"] = "freeze"
 commands.freeze["command"] = function(sender, arguments, targets)
-  if NoArguments(arguments) then
-    return
-  end
-  
   for _, player in pairs(targets) do
     if player.Character and player.Character.Head and player.Character.Head.Anchored == false then
       player.Character.Head.Anchored = true
@@ -400,9 +367,6 @@ commands.freeze["description"] = "Freezes a player in place."
 commands.unfreeze = {}
 commands.unfreeze["name"] = "unfreeze"
 commands.unfreeze["command"] = function(sender, arguments, targets)
-  if NoArguments(arguments) then
-    return
-  end
   for _, player in pairs(targets) do
     if player.Character and player.Character.Head and player.Character.Head.Anchored == true then
       player.Character.Head.Anchored = false
@@ -417,10 +381,6 @@ commands.thaw = commands.unfreeze
 commands.explode = {}
 commands.explode["name"] = "explode"
 commands.explode["command"] = function(sender, arguments, targets)
-  if NoArguments(arguments) then
-    return
-  end
-
   for _, player in pairs(targets) do
     if player.Character and player.Character.Torso then
       local explosion = Instance.new("Explosion")
@@ -436,10 +396,6 @@ commands.explode["description"] = "Explodes a player."
 commands.invisible = {}
 commands.invisible["name"] = "invisible"
 commands.invisible["command"] = function(sender, arguments, targets)
-  if NoArguments(arguments) then
-    return
-  end
-
   for _, player in pairs(targets) do
     if player.Character then
       for _, part in pairs(player.Character:GetChildren()) do
@@ -459,10 +415,6 @@ commands.ghostify = commands.invisible
 commands.uninvisible = {}
 commands.uninvisible["name"] = "uninvisible"
 commands.uninvisible["command"] = function(sender, arguments, targets)
-  if NoArguments(arguments) then
-    return
-  end
-
   for _, player in pairs(targets) do
     if player.Character then
       for _, part in pairs(player.Character:GetChildren()) do
@@ -482,10 +434,6 @@ commands.unghostify = commands.uninvisible
 commands.music = {}
 commands.music["name"] = "music"
 commands.music["command"] = function(sender, arguments)
-  if NoArguments(arguments) then
-    return
-  end
-
   local url = HasValue(arguments, "url")
   local looped = HasValue(arguments, "looped")
 
@@ -529,9 +477,6 @@ commands.music["description"] = "Plays music."
 commands.modifycommand = {}
 commands.modifycommand["name"] = "modifycommand"
 commands.modifycommand["command"] = function(sender, arguments)
-  if NoArguments(arguments) then
-    return
-  end
   local command = arguments[1]
   local level = arguments[2]
   if commands[command] and command and level then
@@ -665,10 +610,6 @@ commands.ws = commands.walkspeed
 commands.valset = {}
 commands.valset["name"] = "valset"
 commands.valset["command"] = function(sender, arguments, targets)
-  if NoArguments(arguments) then
-    return
-  end
-
   local leaderstat = arguments[2]
   local value = arguments[3]
   for _, player in pairs(targets) do
@@ -692,13 +633,10 @@ commands.change = commands.valset
 commands.teleport = {}
 commands.teleport["name"] = "teleport"
 commands.teleport["command"] = function(sender, arguments, targets)
-  if NoArguments(arguments) then
-    return
-  end
-
   local teleportDestination = arguments[2]
   teleportDestination = string.lower(teleportDestination)
   local playerFound = false
+
   if teleportDestination == "me" then
     playerFound = true
     teleportDestination = sender.Name
@@ -710,16 +648,19 @@ commands.teleport["command"] = function(sender, arguments, targets)
       end
     end
   end
+
   if not playerFound then
     return
   end
   teleportDestinationName = teleportDestination
   teleportDestination = Players:FindFirstChild(teleportDestination).Character.Torso.CFrame
+
   for i, player in pairs(targets) do
     if player.Name == teleportDestinationName then
       table.remove(targets, i)
     end
   end
+
   for i, player in pairs(targets) do
     if player.Character and player.Character.Humanoid and player.Character.Torso and player.Character.Humanoid.Health > 0 then
       player.Character.Torso.CFrame = teleportDestination + Vector3.new(0, i * 5, 0)
@@ -1081,17 +1022,13 @@ commands.unadmin["command"] = function(sender, arguments, targets)
   end
 end
 commands.unadmin["level"] = 1
-commands.unadmin["description"] = "Removes a player permissions."
+commands.unadmin["description"] = "Removes a player's permissions."
 commands.unmod = commands.unadmin
 
 -- Sets a players perm levels.
 commands.setpermlevel = {}
 commands.setpermlevel["name"] = "setpermlevel"
 commands.setpermlevel["command"] = function(sender, arguments, targets)
-  if NoArguments(arguments) then
-    return
-  end
-
   local permission = arguments[2]
 
   if tonumber(permission) == nil or tonumber(permission) == 0 then return end
@@ -1121,30 +1058,118 @@ commands.moderator = commands.mod
 
 -- Shows commands and their descriptions.
 commands.help = {}
-commands.help["name"] = "Help"
-commands.help["command"] = function(sender, arguments, targets)
-  -- if not _G.CNT.NewVersion then
-  local message = Instance.new("Message")
-  local helpString = ""
-  
-  local i = 0
-  for _, command in pairs(commands) do
-    i = i + 1
-    helpString = helpString .. command["name"] .. " - " .. command["description"] .. "		"
-    if i >= 3 then
-      helpString = helpString .. "\n"
-      i = 0
+commands.help["name"] = "help"
+if not _G.CNT.NewVersion then
+  commands.help["command"] = function(sender, arguments, targets)
+    local message = Instance.new("Message")
+    local helpString = ""
+    
+    local i = 0
+    for _, command in pairs(commands) do
+      i = i + 1
+      helpString = helpString .. command["name"] .. " - " .. command["description"] .. "		"
+      if i >= 3 then
+        helpString = helpString .. "\n"
+        i = 0
+      end
     end
+    
+    message.Text = helpString
+    message.Parent = sender.PlayerGui
+    
+    Debris:AddItem(message, 10)
   end
-  
-  message.Text = helpString
-  message.Parent = sender.PlayerGui
-  
-  Debris:AddItem(message, 10)
-  -- end
+elseif _G.CNT.NewVersion then
+  commands.help["command"] = function(sender, arguments, targets)
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "HelpGUI"
+
+    local mainFrame = Instance.new("ScrollingFrame")
+    mainFrame.BackgroundTransparency = 0.5
+    mainFrame.BorderSizePixel = 0
+    mainFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+    mainFrame.Size = UDim2.new(0.15, 0, 0.5, 0)
+    mainFrame.Position = UDim2.new(0.425, 0, 0.25, 0)
+    mainFrame.ScrollBarThickness = 2
+    mainFrame.ZIndex = 3
+    mainFrame.Name = "HelpFrame"
+    mainFrame.Parent = gui
+
+    descriptionLabel = Instance.new("TextLabel")
+    descriptionLabel.Size = UDim2.new(0.15, 0, 0.06, 0)
+    descriptionLabel.Position = UDim2.new(0.425, 0, 0.15, 0)
+    descriptionLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+    descriptionLabel.BackgroundTransparency = 1
+    descriptionLabel.TextColor3 = Color3.new(1, 1, 1)
+    descriptionLabel.TextScaled = true
+    descriptionLabel.Text = ""
+    descriptionLabel.TextStrokeTransparency = 0
+    descriptionLabel.BorderSizePixel = 0
+    descriptionLabel.Name = "DescriptionLabel"
+    descriptionLabel.ZIndex = 5
+    descriptionLabel.Parent = gui
+
+    titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(0.15, 0, 0.025, 0)
+    titleLabel.Position = UDim2.new(0.425, 0, 0.218, 0)
+    titleLabel.Text = "  Help"
+    titleLabel.TextXAlignment = "Left"
+    titleLabel.BorderSizePixel = 0
+    titleLabel.TextColor3 = Color3.new(1, 1, 1)
+    titleLabel.TextScaled = true
+    titleLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+    titleLabel.BackgroundTransparency = 0.5
+    titleLabel.Name = "Title"
+
+    closeButton = Instance.new("TextButton")
+    closeButton.Size = UDim2.new(0.06, 0, 0.75, 0)
+    closeButton.Position = UDim2.new(0.9, 0, 0.1, 0)
+    closeButton.TextScaled = true
+    closeButton.Text = "X"
+    closeButton.TextColor3 = Color3.new(1, 1, 1)
+    closeButton.BackgroundColor3 = Color3.new(170/255, 0, 0)
+    closeButton.BackgroundTransparency = 0.5
+    closeButton.BorderSizePixel = 0
+
+    closeButton.MouseButton1Click:connect(function()
+      gui:Destroy()
+    end)
+
+    closeButton.Parent = titleLabel
+    titleLabel.Parent = gui
+
+    i = 0
+    for _, command in pairs(commands) do
+      local textLabel = Instance.new("TextLabel")
+      textLabel.Size = UDim2.new(0.5, 0, 0.01, 0)
+      textLabel.Position = UDim2.new(0.25, 0, 0.01 * i, 0)
+      textLabel.BorderSizePixel = 0
+      textLabel.BackgroundTransparency = 1
+      textLabel.TextColor3 = Color3.new(1, 1, 1)
+      textLabel.TextScaled = true
+      textLabel.Text = command["name"]
+      textLabel.ZIndex = 4
+      textLabel.Name = command["name"]
+
+      textLabel.MouseEnter:connect(function(x, y)
+        descriptionLabel.Position = UDim2.new(0, x, 0, y)
+        descriptionLabel.BackgroundTransparency = 1
+        descriptionLabel.Text = command["description"]
+      end)
+
+      mainFrame.MouseLeave:connect(function()
+        descriptionLabel.Text = ""
+      end)
+
+      textLabel.Parent = mainFrame
+      i = i + 1
+    end
+    
+    gui.Parent = sender.PlayerGui
+  end
 end
 commands.help["level"] = 5
-commands.help["description"] = "Shows commands and their descriptions."
+commands.help["description"] = "Shows commands."
 
 -- Command Functions
 
@@ -1236,41 +1261,44 @@ local function ParseMessage(player, message)
       break
     end
   end
+
   if prefixMatch then
     message = string.sub(message, string.len(chosenPrefix) + 1)
     local arguments = {}
+
     for argument in string.gmatch(message, "[^%s]+") do
       table.insert(arguments, argument)
     end
-    if (#arguments <= 0
-        or #arguments >= 2
-       )
-    then
-          return
-    end
+
     local commandName = arguments[1]
     commandName = commandName:lower()
-    if commands[commandName] == nil then
+
+    if commandName and commands[commandName] == nil then
       return
     end
+
     local commandFunction = commands[commandName]["command"]
     table.remove(arguments, 1)
     local targets = GetTargets(player, arguments)
     local targetNames = {}
+
     for _, target in pairs(targets) do
       table.insert(targetNames, target.Name)
     end
+
     if admins[player.Name] then
       powerLevel = admins[player.Name]
     elseif admins[player.UserId] then
       powerLevel = admins[player.UserId]
     end
+
     if commandFunction ~= nil and powerLevel <= commands[commandName]["level"] then
       print("CNT: Executing command \"".. commandName .."\" with arguments \"".. table.concat(arguments, " ") .. "\" with targets \"" .. table.concat(targetNames, " ") .. "\"")
       Spawn(function()
         local success, fail = pcall(function()
           commandFunction(player, arguments, targets)
         end)
+
         if not success then
           warn("CNT: Error occurred while executing command \"".. commandName .."\". Lua reports this error: \"".. fail .. "\"")
         end
@@ -1330,8 +1358,6 @@ if INFECTED then
   _G.CNT.AV.Scanning = TO_SCAN
   game:WaitForChild("Scan").Disabled = false
 end
-
-_G.CNT.NewVersion = (GetVersion() >= 2810)   
 
 local message = "CNT v%s has loaded! (CLIENT: %s - LUA: %s - GUIS: %s"
 print(message:format(CNT_VERSION, CLIENT_VERSION, LUA_VERSION, (_G.CNT.NewVersion and "YES" or "NO")))
