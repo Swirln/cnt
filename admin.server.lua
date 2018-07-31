@@ -552,8 +552,10 @@ commands.unban["name"] = "unban"
 commands.unban["command"] = function(sender, arguments, targets)
   local player = arguments[1]
 
-  local index = ReturnIndexOf(banned, player)
-  table.remove(banned, index)
+  if ReturnIndexOf(banned, player) then
+    local index = ReturnIndexOf(banned, player)
+    table.remove(banned, index)
+  end
 end
 commands.unban["level"] = 2
 commands.unban["description"] = "Unbans a user from the game."
