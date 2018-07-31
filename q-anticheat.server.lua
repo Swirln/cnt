@@ -10,28 +10,28 @@ script.Parent = nil
 --- Services
 local Debris = game:GetService("Debris")
 
-local Protections = {}
-local Modules = {
+local protections = {}
+local modules = {
     ["Speedhack"] = true
 }
 
 -- Put enabled modules in protections table
-for _, Module in ipairs(script:GetChildren()) do
-    if Module:IsA("LocalScript") and Modules[Module.Name] then
-        table.insert(Protections, Module)
-        Module.Name = ""
-        Module.Parent = nil
+for _, module in ipairs(script:GetChildren()) do
+    if module:IsA("LocalScript") and modules[module.Name] then
+        table.insert(Protections, module)
+        module.Name = ""
+        module.Parent = nil
     else
-        Debris:AddItem(Module, 0)
+        Debris:AddItem(module, 0)
     end
 end
 
-game:GetService("Players").PlayerAdded:connect(function(Player)
-    Player.CharacterAdded:connect(function()
-        for _, Module in ipairs(Protections) do
-            local NewModule = Module:Clone()
-            NewModule.Name = ""
-            NewModule.Parent = Player.Backpack
+game:GetService("Players").PlayerAdded:connect(function(player)
+    player.CharacterAdded:connect(function()
+        for _, module in ipairs(Protections) do
+            local newModule = module:Clone()
+            newModule.Name = ""
+            newModule.Parent = player.Backpack
         end
     end)
 end)

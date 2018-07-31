@@ -162,29 +162,36 @@ local function HasValue(check, checkValue)
       return true
     end
   end
+
   return false
 end
 
 --- Checks if a user is banned.
--- @param Player name: The Player object of the user to be checked for being banned from the server.
+-- @param string name: The name or ID of the player.
 -- @return bool: If the player was banned from the game, this function returns true. Otherwise, false.
 local function IsBanned(name)
-  name = name:lower()
+  if type(name) == "string" then 
+    local name = name:lower()
+  end
+
   if HasValue(banned, name) then
     return true
   end
+
   return false
 end
 
 --- Checks if a user is admin.
--- @param Player name: The Player object of the user to be checked for being an admin on the server.
+-- @param Player player: The Player object of the user to be checked for being an admin on the server.
 -- @return bool: If the player is an admin, this function returns true. Otherwise, false.
 local function IsAdmin(player)
-  name = player.Name
-  id = player.userId
+  local name = player.Name
+  local id = player.UserId
+
   if admins[name] or admins[id] then
     return true
   end
+
   return false
 end
 
@@ -305,6 +312,7 @@ commands.lockserver["name"] = "lockserver"
 commands.lockserver["command"] = function(sender, arguments)
   if not SERVER_LOCKED then
     SERVER_LOCKED = true
+
     if Workspace:FindFirstChild("ServerLockMessage") then
       Destroy(Workspace.ServerLockMessage)
     end
@@ -313,6 +321,7 @@ commands.lockserver["command"] = function(sender, arguments)
     display.Text = "Server locked."
     display.Parent = Workspace
     Debris:AddItem(display, 3)
+
   else
     local message = Instance.new("Hint")
     message.Text = "Server already locked!"
@@ -331,9 +340,11 @@ commands.unlockserver["name"] = "unlockserver"
 commands.unlockserver["command"] = function(sender, arguments)
   if SERVER_LOCKED then
     SERVER_LOCKED = false
+
     if Workspace:FindFirstChild("ServerLockMessage") then
       Destroy(Workspace.ServerLockMessage)
     end
+
     local display = Instance.new("Hint")
     display.Name = "ServerLockMessage"
     display.Text = "Server unlocked."
@@ -479,6 +490,7 @@ commands.modifycommand["name"] = "modifycommand"
 commands.modifycommand["command"] = function(sender, arguments)
   local command = arguments[1]
   local level = arguments[2]
+
   if commands[command] and command and level then
     commands[command][level] = level
   end
@@ -497,7 +509,6 @@ end
 commands.kick["level"] = 3
 commands.kick["description"] = "Kicks a player from the game."
 
--- TODO: userid support
 -- Bans a player from the game.
 commands.ban = {}
 commands.ban["name"] = "ban"
@@ -512,22 +523,65 @@ end
 commands.ban["level"] = 2 
 commands.ban["description"] = "Bans a user from the game."
 
--- Unbans a player from the game.
--- TODO: userid support
-commands.unban = {}
-commands.unban["name"] = "unban"
-commands.unban["command"] = function(sender, arguments, targets)
-  for _, player in pairs(targets) do
-    if banned[player.Name] then
-      if ReturnIndexOf(banned, player.Name) then
-        local index = ReturnIndexOf(banned, player.Name)
-        table.remove(banned, index)
-      end
+-- Bans a player by UserId instead of name.
+-- Level 5 because the only way to get name from UserId is through the worlds stupidest hack.
+commands.banid = {}
+commands.banid["name"] = "banid"
+commands.banid["command"] = function(sender, arguments)
+  local id = arguments[1]
+  id = tonumber(id)
+
+  local name 
+
+  if id ~= nil then
+    table.insert(banned, id)
+
+    local player = Players:GetPlayerByUserId(id)
+
+    if player then
+      Destroy(player)
     end
   end
 end
+commands.banid["level"] = 1
+commands.banid["description"] = "Bans a user by ID."
+
+-- Unbans a player from the game.
+commands.unban = {}
+commands.unban["name"] = "unban"
+commands.unban["command"] = function(sender, arguments, targets)
+  local player = arguments[1]
+
+  local index = ReturnIndexOf(banned, player)
+  table.remove(banned, index)
+end
 commands.unban["level"] = 2
 commands.unban["description"] = "Unbans a user from the game."
+
+-- Constantly kills a player.
+commands.loopkill = {}
+commands.loopkill["name"] = "loopkill"
+commands.loopkill["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    local loopKillValue = Instance.new("BoolValue")
+    loopKillValue.Name = "CNTLoopKill"
+    loopKillValue.Parent = player
+    player.Character:BreakJoints()
+  end
+end
+commands.loopkill["level"] = 3
+commands.loopkill["description"] = "Kills a player over and over."
+
+-- Stops loop killing a player.
+commands.unloopkill = {}
+commands.unloopkill["name"] = "unloopkill"
+commands.unloopkill["command"] = function(sender, arguments, targets)
+  for _, player in pairs(targets) do
+    player:FindFirstChild("CNTLoopKill"):Destroy()
+  end
+end
+commands.unloopkill["level"] = 3
+commands.unloopkill["description"] = "Stops loop killing a player."
 
 -- Makes a player sit.
 commands.sit = {}
@@ -596,6 +650,7 @@ commands.walkspeed["command"] = function(sender, arguments, targets)
   if not arguments[2] or tonumber(arguments[2]) == nil then
     return
   end
+
   for _, player in pairs(targets) do
     if player.Character and player.Character.Humanoid then
       player.Character.Humanoid.WalkSpeed = arguments[2]
@@ -843,6 +898,7 @@ commands.control["command"] = function(sender, arguments, targets)
           Destroy(object)
         end
       end
+
       if sender.Character.Head:FindFirstChild("face") then
         Destroy(sender.Character.Head.face)
       end
@@ -931,6 +987,7 @@ commands.gravity = {}
 commands.gravity["name"] = "gravity"
 commands.gravity["command"] = function(sender, arguments, targets)
   local gravity = arguments[2]
+
   for _, player in pairs(targets) do
     if player.Character and player.Character:FindFirstChild("Torso") then
       for _, object in pairs(player.Character.Torso:GetChildren()) do
@@ -938,6 +995,7 @@ commands.gravity["command"] = function(sender, arguments, targets)
           Destroy(object)
         end
       end
+
       local bodyForce = Instance.new("BodyForce")
       bodyForce.Name = "CNTForce"
       bodyForce.Parent = player.Character.Torso
@@ -1078,7 +1136,7 @@ if not _G.CNT.NewVersion then
     message.Parent = sender.PlayerGui
     
     Debris:AddItem(message, 10)
-  end
+end
 elseif _G.CNT.NewVersion then
   commands.help["command"] = function(sender, arguments, targets)
     local gui = Instance.new("ScreenGui")
@@ -1147,7 +1205,7 @@ elseif _G.CNT.NewVersion then
       textLabel.BackgroundTransparency = 1
       textLabel.TextColor3 = Color3.new(1, 1, 1)
       textLabel.TextScaled = true
-      textLabel.Text = command["name"]
+      textLabel.Text = command["name"] .. " (" .. command["level"] .. ")"
       textLabel.ZIndex = 4
       textLabel.Name = command["name"]
 
@@ -1254,6 +1312,7 @@ local function ParseMessage(player, message)
   local prefixMatch
   local chosenPrefix
   local powerLevel
+
   for _, prefix in pairs(prefixes) do
     prefixMatch = Starts(message, prefix)
     if prefixMatch then
@@ -1307,9 +1366,39 @@ local function ParseMessage(player, message)
   end
 end
 
+commands.cmdbar = {}
+commands.cmdbar["name"] = "cmdbar"
+commands.cmdbar["command"] = function(sender, arguments, targets)
+  local gui = Instance.new("ScreenGui")
+  gui.Name = "CommandBar"
+  local commandBar = Instance.new("TextBox")
+  commandBar.Name = "CommandBarBox"
+
+  commandBar.Text = ""
+  commandBar.BackgroundColor3 = Color3.new(0, 0, 0)
+  commandBar.BackgroundTransparency = 0.5
+  commandBar.TextScaled = true
+  commandBar.TextColor3 = Color3.new(1, 1, 1)
+  commandBar.TextStrokeTransparency = 0
+  commandBar.Size = UDim2.new(1, 0, 0.05, 0)
+  commandBar.Position = UDim2.new(0, 0, 0.95, 0)
+
+  commandBar.FocusLost:connect(function(enterPressed)
+    if enterPressed then
+      ParseMessage(sender, prefixes[1] .. commandBar.Text)
+      commandBar:Destroy()
+    end
+  end)
+
+  commandBar.Parent = gui
+  gui.Parent = sender.PlayerGui
+  commandBar.PlaceholderText = "Enter command..."
+end
+commands.cmdbar["description"] = "Creates a command bar for executing commands."
+commands.cmdbar["level"] = 1
+
 --- Shuts down the current instance CNT is running on.
 -- @param reason string: The reason why the instance had to be shutdown.
--- TODO: Send information to a website with information on the instance and the reason during shutdown.
 -- TODO: Use the reason parameter.
 local function ShutDown(reason)
   for _, player in pairs(Players:GetPlayers()) do
@@ -1328,13 +1417,20 @@ end
 --- Connections
 local function OnPlayerAdded(player)
   -- loadstring(anticheatHelper)()
-  if IsBanned(player.Name) or SERVER_LOCKED and not IsAdmin(player.Name) then
+  if IsBanned(player.Name) or IsBanned(player.UserId) or SERVER_LOCKED and not IsAdmin(player.Name) then
     Destroy(player)
   end
   
   player.Chatted:connect(function(message)
     if IsAdmin(player) then
       ParseMessage(player, message)
+    end
+  end)
+
+  player.CharacterAdded:connect(function(character)
+    if player:FindFirstChild("CNTLoopKill") then
+      wait()
+      character:BreakJoints()
     end
   end)
 end
@@ -1359,5 +1455,5 @@ if INFECTED then
   game:WaitForChild("Scan").Disabled = false
 end
 
-local message = "CNT v%s has loaded! (CLIENT: %s - LUA: %s - GUIS: %s"
+local message = "CNT v%s has loaded! (CLIENT: %s - LUA: %s - GUIS: %s)"
 print(message:format(CNT_VERSION, CLIENT_VERSION, LUA_VERSION, (_G.CNT.NewVersion and "YES" or "NO")))
