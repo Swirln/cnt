@@ -1401,11 +1401,10 @@ commands.cmdbar["level"] = 1
 
 --- Shuts down the current instance CNT is running on.
 -- @param reason string: The reason why the instance had to be shutdown.
--- TODO: Use the reason parameter.
-local function ShutDown(reason)
+local function ShutDown()
+  SERVER_LOCKED = true
   for _, player in pairs(Players:GetPlayers()) do
     Destroy(player)
-    SERVER_LOCKED = true
   end
 end
 
